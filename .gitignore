@@ -1,3 +1,6 @@
+bc-forms-config.php
+
+# Default WordPress ignores provided by Github
 .htaccess
 wp-config.php
 wp-content/uploads/
