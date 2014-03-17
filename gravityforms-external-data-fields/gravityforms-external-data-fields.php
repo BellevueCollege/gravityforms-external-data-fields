@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: Bellevue College Authenticated Forms
+Plugin Name: Gravity Forms External Data Fields
 Plugin URI: http://www.bellevuecollege.edu
 Description: Extend Gravity Forms with Bellevue College form field data
 Author: Bellevue College Technology Development and Communications
