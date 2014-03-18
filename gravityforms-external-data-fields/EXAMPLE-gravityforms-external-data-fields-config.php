@@ -1,6 +1,19 @@
 <?php
 // TODO: make a copy of this file w/ the 'EXAMPLE-' prefix removed, then uncomment the following lines & add your settings
 
+/*
+class gf_external_data_fields_config
+{
+  // See http://docs.php.net/manual/en/ref.pdo-odbc.connection.php
+  public static $dsn = "";
+  // Database credentials
+  public $studentDataLogin = "";
+  public $studentDataPassword = "";
+
+  public static $studentQuery = "";
+}
+//*/
+
 //class autoFillSettings
 //{
 //  // Connection string

@@ -5,6 +5,7 @@
  * Date: 3/14/14
  * Time: 7:20 PM
  */
+require_once("gravityforms-external-data-fields-config.php");
 
 class studentData
 {
@@ -17,7 +18,31 @@ class studentData
   {
     $this->studentID = $sid;
 
-    // TODO: retrieve student info from database
+    // retrieve student info from database
+    try
+    {
+      $dbh = new PDO(gf_external_data_fields_config::$dsn, gf_external_data_fields_config::$studentDataLogin, gf_external_data_fields_config::$studentDataPassword);
+
+      $rs = $dbh->query(gf_external_data_fields_config::$studentQuery);
+      // TODO: use fetch() - http://docs.php.net/manual/en/pdostatement.fetch.php
+
+      if(($rs) && ($rs->rowCount() > 0))
+      {
+        if($rs->rowCount() > 1)
+        {
+          // TODO: warn that query returned too many records
+        }
+      }
+      else
+      {
+        die("Student query returned no records.");
+      }
+    }
+    catch(PDOException $ex)
+    {
+      // TODO: log error message
+      die($ex->getMessage());
+    }
 
     // temporary test data
 //    $this->firstName = "Shawn";
