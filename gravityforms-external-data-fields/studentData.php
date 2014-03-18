@@ -20,9 +20,9 @@ class studentData
     // TODO: retrieve student info from database
 
     // temporary test data
-    $this->firstName = "Shawn";
-    $this->lastName = "South";
-    $this->emailAddress = "shawn.south@bellevuecollege.edu";
+//    $this->firstName = "Shawn";
+//    $this->lastName = "South";
+//    $this->emailAddress = "shawn.south@bellevuecollege.edu";
   }
 
   /**

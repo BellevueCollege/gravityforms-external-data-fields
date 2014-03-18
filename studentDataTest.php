@@ -10,13 +10,31 @@ require_once("gravityforms-external-data-fields/studentData.php");
 
 class studentDataTest extends PHPUnit_Framework_TestCase
 {
-  public function testInitializeWithSid()
+  public function testGetStudentWithNoEmail()
   {
     $sid = "954999999";
     $data = new studentData($sid);
 
     $this->assertNotNull($data, "studentData object is null");
     $this->assertNotNull($data->getStudentID(), "StudentID is null");
+
     $this->assertEquals($sid, $data->getStudentID());
+    $this->assertEquals("Student", $data->getFirstName());
+    $this->assertEquals("Test", $data->getLastName());
+    $this->assertEmpty($data->getEmailAddress());
+  }
+
+  public function testGetTestStudentWithEmail()
+  {
+    $sid = "950394601";
+    $data = new studentData($sid);
+
+    $this->assertNotNull($data, "studentData object is null");
+    $this->assertNotNull($data->getStudentID(), "StudentID is null");
+
+    $this->assertEquals($sid, $data->getStudentID());
+    $this->assertEquals("Shawn", $data->getFirstName());
+    $this->assertEquals("South", $data->getLastName());
+    $this->assertEquals("shawn.south@bellevuecollege.edu", $data->getEmailAddress());
   }
 }
