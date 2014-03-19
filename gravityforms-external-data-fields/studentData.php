@@ -40,23 +40,17 @@ class studentData
         }
         else
         {
-          print("Student record is null!");
-          print_r($query->errorInfo());
-//          die("Student record is null!");
+          $this->log_error("Student record is null!", $query->errorInfo());
         }
       }
       else
       {
-        print("Query results are null!");
-        print_r($query->errorInfo());
-//        die("Student query returned no records.");
+        $this->log_error("Student data query results are null!", $query->errorInfo());
       }
     }
     catch(PDOException $ex)
     {
-      // TODO: log error message
-      print_r($ex->getMessage());
-//      die($ex->getMessage());
+      $this->log_error("Failed to retrieve student data: ".$ex->getMessage());
     }
 
     // close database connection
@@ -95,4 +89,16 @@ class studentData
     return $this->emailAddress;
   }
 
+  /**
+   * @param      $msg
+   * @param null $errorInfo
+   */
+  private function log_error($msg, $errorInfo = null)
+  {
+    error_log("studentData: ".$msg);
+    if($errorInfo)
+    {
+      error_log($errorInfo);
+    }
+  }
 }
