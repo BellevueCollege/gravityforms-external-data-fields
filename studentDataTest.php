@@ -10,6 +10,12 @@ require_once("gravityforms-external-data-fields/studentData.php");
 
 class studentDataTest extends PHPUnit_Framework_TestCase
 {
+
+  // TODO: write generic unit tests that are not dependent on the source
+
+  /*
+   * The data expected by the following tests is specific to Bellevue College.
+   */
   public function testGetStudentWithNoEmail()
   {
     $sid = "954999999";

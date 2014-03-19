@@ -18,22 +18,15 @@ class studentData
   {
     $this->studentID = $sid;
 
-    // temporary test data
-//    $this->firstName = "Shawn";
-//    $this->lastName = "South";
-//    $this->emailAddress = "shawn.south@bellevuecollege.edu";
-
     // retrieve student info from database
     try
     {
-      $dbh = new PDO(gf_external_data_fields_config::$dsn);//,
-//                     gf_external_data_fields_config::$studentDataLogin,
-//                     gf_external_data_fields_config::$studentDataPassword);
-
-//      $q = $dbh->query(gf_external_data_fields_config::$studentQuery);
+      $dbh = new PDO(gf_external_data_fields_config::$dsn,
+                     gf_external_data_fields_config::$studentDataLogin,
+                     gf_external_data_fields_config::$studentDataPassword);
 
       $query = $dbh->prepare(gf_external_data_fields_config::$studentQuery);
-      $query->execute();
+      $query->execute(array($this->studentID));
 
       if($query)
       {
