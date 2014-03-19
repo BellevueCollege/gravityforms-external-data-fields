@@ -1,14 +1,6 @@
 <?php
 // TODO: make a copy of this file w/ the 'EXAMPLE-' prefix removed, then uncomment the following lines & add your settings
 
-//class autoFillSettings
-//{
-//  // Connection string
-//  public $connection = "";
-//  // Table name, stored procedure or SELECT statement
-//  public $command = "";
-//  // List of mappings - from the database column name to the form field
-//  public $mappings = array(
-//    "fieldID" => "columnName"
-//  );
-//}
+//$file_upload_path = "/var/www/tripti-test/"; // Set this to physical path of the directory
+//$file_upload_url = "http://shoes.bellevuecollege.edu/tripti-test/"; // Set this to the url of the directory
+?>
