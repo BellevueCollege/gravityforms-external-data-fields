@@ -5,6 +5,7 @@
  * Date: 3/14/14
  * Time: 7:20 PM
  */
+require_once("gravityforms-external-data-fields-config.php");
 
 class studentData
 {
@@ -17,12 +18,43 @@ class studentData
   {
     $this->studentID = $sid;
 
-    // TODO: retrieve student info from database
+    // retrieve student info from database
+    try
+    {
+      $dbh = new PDO(gf_external_data_fields_config::$dsn,
+                     gf_external_data_fields_config::$studentDataLogin,
+                     gf_external_data_fields_config::$studentDataPassword);
 
-    // temporary test data
-    $this->firstName = "Shawn";
-    $this->lastName = "South";
-    $this->emailAddress = "shawn.south@bellevuecollege.edu";
+      $query = $dbh->prepare(gf_external_data_fields_config::$studentQuery);
+      $query->execute(array($this->studentID));
+
+      if($query)
+      {
+        $rs = $query->fetch(PDO::FETCH_ASSOC);
+
+        if($rs)
+        {
+          $this->firstName = $rs[gf_external_data_fields_config::$sqlColumnFirstName];
+          $this->lastName = $rs[gf_external_data_fields_config::$sqlColumnLastName];
+          $this->emailAddress = $rs[gf_external_data_fields_config::$sqlColumnEmailAddress];
+        }
+        else
+        {
+          $this->log_error("Student record is null!", $query->errorInfo());
+        }
+      }
+      else
+      {
+        $this->log_error("Student data query results are null!", $query->errorInfo());
+      }
+    }
+    catch(PDOException $ex)
+    {
+      $this->log_error("Failed to retrieve student data: ".$ex->getMessage());
+    }
+
+    // close database connection
+    $dbh = null;
   }
 
   /**
@@ -57,4 +89,16 @@ class studentData
     return $this->emailAddress;
   }
 
+  /**
+   * @param      $msg
+   * @param null $errorInfo
+   */
+  private function log_error($msg, $errorInfo = null)
+  {
+    error_log("studentData: ".$msg);
+    if($errorInfo)
+    {
+      error_log($errorInfo);
+    }
+  }
 }
