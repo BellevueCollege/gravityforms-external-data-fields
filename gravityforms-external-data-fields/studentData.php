@@ -13,6 +13,8 @@ class studentData
   private $lastName = "";
   private $studentID = "";
   private $emailAddress = "";
+  private $phoneDaytime = "";
+  private $phoneEvening = "";
 
   function __construct($sid)
   {
@@ -38,6 +40,8 @@ class studentData
           $this->firstName = $rs[gf_external_data_fields_config::$sqlColumnFirstName];
           $this->lastName = $rs[gf_external_data_fields_config::$sqlColumnLastName];
           $this->emailAddress = $rs[gf_external_data_fields_config::$sqlColumnEmailAddress];
+          $this->phoneDaytime = $rs[gf_external_data_fields_config::$sqColumnlDaytimePhone];
+          $this->phoneEvening = $rs[gf_external_data_fields_config::$sqlColumnEveningPhone];
         }
         else
         {
@@ -54,13 +58,14 @@ class studentData
       $err = error_get_last();
       $this->log_error("Failed to retrieve student data: ". $ex->getCode() .": '".$ex->getMessage()."' Trace: ".$ex->getTraceAsString());
       $this->log_error("Connection: ". (($dbh != null) ? $dbh->errorInfo() : "null"));
-      $this->log_error("Last error: ". $err);
+      $this->log_error("Last PHP error: ". $err);
     }
 
     // close database connection
     $dbh = null;
   }
 
+  //region Properties
   /**
    * @return string
    */
@@ -94,6 +99,24 @@ class studentData
   }
 
   /**
+   * @return string
+   */
+  public function getDaytimePhone()
+  {
+    return $this->phoneDaytime;
+  }
+
+  /**
+   * @return string
+   */
+  public function getEveningPhone()
+  {
+    return $this->phoneEvening;
+  }
+  //endregion
+
+  //region Private methods
+  /**
    * @param      $msg
    * @param null $errorInfo
    */
@@ -105,4 +128,5 @@ class studentData
       error_log($errorInfo);
     }
   }
+  //endregion
 }

@@ -28,6 +28,8 @@ class studentDataTest extends PHPUnit_Framework_TestCase
     $this->assertEquals("Student", $data->getFirstName());
     $this->assertEquals("Test", $data->getLastName());
     $this->assertEmpty($data->getEmailAddress());
+    $this->assertNotEmpty($data->getDaytimePhone());
+    $this->assertEmpty($data->getEveningPhone());
   }
 
   public function testGetTestStudentWithEmail()
@@ -42,5 +44,7 @@ class studentDataTest extends PHPUnit_Framework_TestCase
     $this->assertEquals("Shawn", $data->getFirstName());
     $this->assertEquals("South", $data->getLastName());
     $this->assertEquals("shawn.south@bellevuecollege.edu", $data->getEmailAddress());
+    $this->assertNotEmpty($data->getDaytimePhone());
+    $this->assertNotEmpty($data->getEveningPhone());
   }
 }
