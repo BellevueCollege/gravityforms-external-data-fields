@@ -17,6 +17,7 @@ class studentData
   function __construct($sid)
   {
     $this->studentID = $sid;
+    $dbh = null;
 
     // retrieve student info from database
     try
@@ -50,7 +51,10 @@ class studentData
     }
     catch(PDOException $ex)
     {
-      $this->log_error("Failed to retrieve student data: ".$ex->getMessage());
+      $err = error_get_last();
+      $this->log_error("Failed to retrieve student data: ". $ex->getCode() .": '".$ex->getMessage()."' Trace: ".$ex->getTraceAsString());
+      $this->log_error("Connection: ". (($dbh != null) ? $dbh->errorInfo() : "null"));
+      $this->log_error("Last error: ". $err);
     }
 
     // close database connection
