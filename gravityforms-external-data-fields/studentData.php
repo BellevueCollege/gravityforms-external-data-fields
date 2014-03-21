@@ -11,6 +11,7 @@ class studentData
 {
   const UNSPECIFIED_DOMAIN = "UNSPECIFIED";
 
+  private $hasStudentRecord;
   private $firstName = "";
   private $lastName = "";
   private $studentID = "";
@@ -24,6 +25,7 @@ class studentData
   {
     $this->username = $this->extractUsername($login);
     $dbh = null;
+    $this->hasStudentRecord = false;
 
     // retrieve student info from database
     try
@@ -41,6 +43,8 @@ class studentData
 
         if($rs)
         {
+          $this->hasStudentRecord = true;
+
           $this->studentID = $rs[gf_external_data_fields_config::$sqlColumnStudentID];
           $this->firstName = $rs[gf_external_data_fields_config::$sqlColumnFirstName];
           $this->lastName = $rs[gf_external_data_fields_config::$sqlColumnLastName];
@@ -50,24 +54,43 @@ class studentData
         }
         else
         {
-          $this->log_error("Student record is null!", $query->errorInfo());
+          $this->logError("Student record is null!", $query->errorInfo());
         }
       }
       else
       {
-        $this->log_error("Student data query results are null!", $query->errorInfo());
+        $this->logError("Student data query results are null!", $query->errorInfo());
       }
     }
     catch(PDOException $ex)
     {
       $err = error_get_last();
-      $this->log_error("Failed to retrieve student data: ". $ex->getCode() .": '".$ex->getMessage()."' Trace: ".$ex->getTraceAsString());
-      $this->log_error("Connection: ". (($dbh != null) ? $dbh->errorInfo() : "null"));
-      $this->log_error("Last PHP error: ". $err);
+      $this->logError("Failed to retrieve student data: ". $ex->getCode() .": '".$ex->getMessage()."' Trace: ".$ex->getTraceAsString());
+      $this->logError("Connection: ". (($dbh != null) ? $dbh->errorInfo() : "null"));
+      $this->logError("Last PHP error: ". $err);
     }
 
     // close database connection
     $dbh = null;
+  }
+
+  /**
+   * @return bool
+   */
+  public function isAStudent()
+  {
+    return $this->hasStudentRecord;
+  }
+
+  /**
+   * @param $login
+   *
+   * @return bool
+   */
+  public static function IsStudent($login)
+  {
+    $sd = new studentData($login);
+    return $sd->isAStudent();
   }
 
   //region Properties
@@ -141,17 +164,23 @@ class studentData
    * @param            $msg
    * @param null $errorInfo
    */
-  private function log_error($msg, $errorInfo = null)
+  private static function logError($msg, $errorInfo = null)
   {
-    error_log("studentData: ".$msg);
+    $message = "studentData: " . $msg;
+    error_log($message, 0);
     if($errorInfo)
     {
-      error_log(print_r($errorInfo, true));
+      error_log(print_r($errorInfo, true), 0);
     }
   }
 
   /**
-   * @param string
+   * @param      $login
+   *
+   * @internal param null|\studentData $sd
+   *
+   * @return mixed
+  @internal param $string
    */
   private function extractUsername($login)
   {
@@ -160,6 +189,7 @@ class studentData
     {
       $credential = explode('\\', $login);
       $this->domain = $credential[0];
+
       return $credential[1];
     }
     else

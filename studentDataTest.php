@@ -8,6 +8,9 @@
 
 require_once("gravityforms-external-data-fields/studentData.php");
 
+// This line stops PHP timezone warnings/exceptions that interfere with PHPUnit reporting
+date_default_timezone_set('America/Los_Angeles');
+
 class studentDataTest extends PHPUnit_Framework_TestCase
 {
 
@@ -59,6 +62,30 @@ class studentDataTest extends PHPUnit_Framework_TestCase
     $this->assertEmpty($data->getEmailAddress());
     $this->assertNotEmpty($data->getDaytimePhone());
     $this->assertEmpty($data->getEveningPhone());
+  }
+
+  public function testIsStudent_Static_True()
+  {
+    $isStudent = studentData::IsStudent("_teststu01");
+    $this->assertTrue($isStudent);
+  }
+
+  public function testIsStudent_Instance_True()
+  {
+    $data = new studentData("_teststu01");
+    $this->assertTrue($data->isAStudent());
+  }
+
+  public function testIsStudent_Static_False()
+  {
+    $isStudent = studentData::IsStudent("tripti.sharma");
+    $this->assertFalse($isStudent);
+  }
+
+  public function testIsStudent_Instance_False()
+  {
+    $data = new studentData("tripti.sharma");
+    $this->assertFalse($data->isAStudent());
   }
 
   /**
