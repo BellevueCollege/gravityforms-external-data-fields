@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: ssouth
+ * User: shawn.south@bellevuecollege.edu
  * Date: 3/14/14
  * Time: 7:20 PM
  */
@@ -9,14 +9,23 @@ require_once("gravityforms-external-data-fields-config.php");
 
 class studentData
 {
+  const UNSPECIFIED_DOMAIN = "UNSPECIFIED";
+
+  private $hasStudentRecord;
   private $firstName = "";
   private $lastName = "";
   private $studentID = "";
   private $emailAddress = "";
+  private $phoneDaytime = "";
+  private $phoneEvening = "";
+  private $username = "";
+  private $domain = studentData::UNSPECIFIED_DOMAIN;
 
-  function __construct($sid)
+  function __construct($login)
   {
-    $this->studentID = $sid;
+    $this->username = $this->extractUsername($login);
+    $dbh = null;
+    $this->hasStudentRecord = false;
 
     // retrieve student info from database
     try
@@ -26,7 +35,7 @@ class studentData
                      gf_external_data_fields_config::$studentDataPassword);
 
       $query = $dbh->prepare(gf_external_data_fields_config::$studentQuery);
-      $query->execute(array($this->studentID));
+      $query->execute(array($this->username));
 
       if($query)
       {
@@ -34,29 +43,57 @@ class studentData
 
         if($rs)
         {
+          $this->hasStudentRecord = true;
+
+          $this->studentID = $rs[gf_external_data_fields_config::$sqlColumnStudentID];
           $this->firstName = $rs[gf_external_data_fields_config::$sqlColumnFirstName];
           $this->lastName = $rs[gf_external_data_fields_config::$sqlColumnLastName];
           $this->emailAddress = $rs[gf_external_data_fields_config::$sqlColumnEmailAddress];
+          $this->phoneDaytime = $rs[gf_external_data_fields_config::$sqlColumnDaytimePhone];
+          $this->phoneEvening = $rs[gf_external_data_fields_config::$sqlColumnEveningPhone];
         }
         else
         {
-          $this->log_error("Student record is null!", $query->errorInfo());
+          $this->logError("Student record is null!", $query->errorInfo());
         }
       }
       else
       {
-        $this->log_error("Student data query results are null!", $query->errorInfo());
+        $this->logError("Student data query results are null!", $query->errorInfo());
       }
     }
     catch(PDOException $ex)
     {
-      $this->log_error("Failed to retrieve student data: ".$ex->getMessage());
+      $err = error_get_last();
+      $this->logError("Failed to retrieve student data: ". $ex->getCode() .": '".$ex->getMessage()."' Trace: ".$ex->getTraceAsString());
+      $this->logError("Connection: ". (($dbh != null) ? $dbh->errorInfo() : "null"));
+      $this->logError("Last PHP error: ". $err);
     }
 
     // close database connection
     $dbh = null;
   }
 
+  /**
+   * @return bool
+   */
+  public function isAStudent()
+  {
+    return $this->hasStudentRecord;
+  }
+
+  /**
+   * @param $login
+   *
+   * @return bool
+   */
+  public static function IsStudent($login)
+  {
+    $sd = new studentData($login);
+    return $sd->isAStudent();
+  }
+
+  //region Properties
   /**
    * @return string
    */
@@ -90,15 +127,75 @@ class studentData
   }
 
   /**
-   * @param      $msg
+   * @return string
+   */
+  public function getDaytimePhone()
+  {
+    return $this->phoneDaytime;
+  }
+
+  /**
+   * @return string
+   */
+  public function getEveningPhone()
+  {
+    return $this->phoneEvening;
+  }
+
+  /**
+   * @return string
+   */
+  public function getUsername()
+  {
+    return $this->username;
+  }
+
+  /**
+   * @return string
+   */
+  public function getLoginDomain()
+  {
+    return $this->domain;
+  }
+  //endregion
+
+  //region Private methods
+  /**
+   * @param            $msg
    * @param null $errorInfo
    */
-  private function log_error($msg, $errorInfo = null)
+  private static function logError($msg, $errorInfo = null)
   {
-    error_log("studentData: ".$msg);
+    $message = "studentData: " . $msg;
+    error_log($message, 0);
     if($errorInfo)
     {
-      error_log($errorInfo);
+      error_log(print_r($errorInfo, true), 0);
     }
   }
+
+  /**
+   * @param      $login
+   *
+   * @internal param null|\studentData $sd
+   *
+   * @return mixed
+  @internal param $string
+   */
+  private function extractUsername($login)
+  {
+    // TODO: parse domain name out if it exists
+    if(strpos($login, '\\'))
+    {
+      $credential = explode('\\', $login);
+      $this->domain = $credential[0];
+
+      return $credential[1];
+    }
+    else
+    {
+      return $login;
+    }
+  }
+  //endregion
 }
