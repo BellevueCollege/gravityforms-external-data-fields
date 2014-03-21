@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: ssouth
+ * User: shawn.south@bellevuecollege.edu
  * Date: 3/14/14
  * Time: 7:20 PM
  */
@@ -9,16 +9,20 @@ require_once("gravityforms-external-data-fields-config.php");
 
 class studentData
 {
+  const UNSPECIFIED_DOMAIN = "UNSPECIFIED";
+
   private $firstName = "";
   private $lastName = "";
   private $studentID = "";
   private $emailAddress = "";
   private $phoneDaytime = "";
   private $phoneEvening = "";
+  private $username = "";
+  private $domain = studentData::UNSPECIFIED_DOMAIN;
 
-  function __construct($sid)
+  function __construct($login)
   {
-    $this->studentID = $sid;
+    $this->username = $this->extractUsername($login);
     $dbh = null;
 
     // retrieve student info from database
@@ -29,7 +33,7 @@ class studentData
                      gf_external_data_fields_config::$studentDataPassword);
 
       $query = $dbh->prepare(gf_external_data_fields_config::$studentQuery);
-      $query->execute(array($this->studentID));
+      $query->execute(array($this->username));
 
       if($query)
       {
@@ -37,10 +41,11 @@ class studentData
 
         if($rs)
         {
+          $this->studentID = $rs[gf_external_data_fields_config::$sqlColumnStudentID];
           $this->firstName = $rs[gf_external_data_fields_config::$sqlColumnFirstName];
           $this->lastName = $rs[gf_external_data_fields_config::$sqlColumnLastName];
           $this->emailAddress = $rs[gf_external_data_fields_config::$sqlColumnEmailAddress];
-          $this->phoneDaytime = $rs[gf_external_data_fields_config::$sqColumnlDaytimePhone];
+          $this->phoneDaytime = $rs[gf_external_data_fields_config::$sqlColumnDaytimePhone];
           $this->phoneEvening = $rs[gf_external_data_fields_config::$sqlColumnEveningPhone];
         }
         else
@@ -113,11 +118,27 @@ class studentData
   {
     return $this->phoneEvening;
   }
+
+  /**
+   * @return string
+   */
+  public function getUsername()
+  {
+    return $this->username;
+  }
+
+  /**
+   * @return string
+   */
+  public function getLoginDomain()
+  {
+    return $this->domain;
+  }
   //endregion
 
   //region Private methods
   /**
-   * @param      $msg
+   * @param            $msg
    * @param null $errorInfo
    */
   private function log_error($msg, $errorInfo = null)
@@ -125,7 +146,25 @@ class studentData
     error_log("studentData: ".$msg);
     if($errorInfo)
     {
-      error_log($errorInfo);
+      error_log(print_r($errorInfo, true));
+    }
+  }
+
+  /**
+   * @param string
+   */
+  private function extractUsername($login)
+  {
+    // TODO: parse domain name out if it exists
+    if(strpos($login, '\\'))
+    {
+      $credential = explode('\\', $login);
+      $this->domain = $credential[0];
+      return $credential[1];
+    }
+    else
+    {
+      return $login;
     }
   }
   //endregion
