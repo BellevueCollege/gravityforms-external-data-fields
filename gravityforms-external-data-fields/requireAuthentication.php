@@ -28,12 +28,17 @@ class requireAuthentication
   protected $shortcode;
   protected $current_user;
 
+  public $enableDebug = false;
+
   /**
-   * @param $post_shortcode
+   * @param      $post_shortcode
+   * @param bool $enableDebug
    */
-  function __construct($post_shortcode)
+  function __construct($post_shortcode, $enableDebug = false)
   {
     $this->shortcode = $post_shortcode;
+    $this->enableDebug = $enableDebug;
+
     add_action( 'wp', array($this, "forceAuthentication") );
 
     $this->ssoInitialize();
@@ -111,8 +116,11 @@ class requireAuthentication
    */
   private function ssoInitialize()
   {
-    // TODO: make log file configurable
-    phpCAS::setDebug("/var/tmp/gravityforms-external-data-fields-debug.log");
+    if ($this->enableDebug)
+    {
+      // TODO: make log file configurable
+      phpCAS::setDebug("/var/tmp/gravityforms-external-data-fields-debug.log");
+    }
 
     try
     {
