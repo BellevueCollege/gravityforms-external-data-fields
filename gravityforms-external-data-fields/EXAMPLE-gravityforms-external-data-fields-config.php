@@ -3,11 +3,17 @@
 
 /* NOTE: commenting just this line will expose the code
 
-$file_upload_path = "/var/www/files/"; // Set this to physical path of the directory
-$file_upload_url = "http://example.com/files/"; // Set this to the url of the directory
 
 class gf_external_data_fields_config
 {
+    const SESSION_USERNAME = "gfedf_username";
+    const FILE_UPLOAD_PATH = "/var/www/tripti-test/"; // Set this to physical path of the directory
+    const FILE_UPLOAD_URL = "http://shoes.bellevuecollege.edu/tripti-test/"; // Set this to the url of the directory
+    const IS_AUTH = "is_auth"; // Set the parameter name of the authenticated text field from the form
+    const IS_VERIFIED_MESSAGE = "VERIFIED SUBMISSION - This individual has confirmed their identity by logging in with their NetID. "; // Set this to a message stating the user is authenticated
+    const IS_NOT_VERIFIED_MESSAGE = "NOT VERIFIED";// Set this to a message stating the user is not authenticated
+
+
   // See http://docs.php.net/manual/en/ref.pdo-dblib.connection.php
   public static $dsn = "";
   // Database credentials
