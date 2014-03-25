@@ -184,10 +184,10 @@ class studentData
    */
   private function extractUsername($login)
   {
-    // TODO: parse domain name out if it exists
     if(strpos($login, '\\'))
     {
       $credential = explode('\\', $login);
+      // we're not currently using the domain, but save it in case we want it later
       $this->domain = $credential[0];
 
       return $credential[1];
