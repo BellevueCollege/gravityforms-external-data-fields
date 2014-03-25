@@ -26,7 +26,7 @@ class requireAuthentication
 {
   protected $authenticationForced = false;
   protected $shortcode;
-  protected $current_user;
+  protected $currentUser;
 
   public $enableDebug = false;
 
@@ -54,12 +54,10 @@ class requireAuthentication
 
     if ($this->hasShortcode())
     {
-      debug_log("A Gravity Form was detected!");
-
       debug_log("Checking if authenticated...");
       if ($this->ssoAuthenticated())
       {
-        $_SESSION[gf_external_data_fields_config::SESSION_USERNAME] = $this->current_user;
+        $_SESSION[gf_external_data_fields_config::SESSION_USERNAME] = $this->currentUser;
         debug_log("...username '" . requireAuthentication::getCurrentUser() . "' saved.");
       }
     }
@@ -101,14 +99,28 @@ class requireAuthentication
    */
   private function hasShortcode()
   {
+    // get a reference to the WordPress post object
     global $post;
+    // get standard regex pattern for shortcodes
     $pattern = get_shortcode_regex();
 
-    // TODO: support more than one shortcode
-    $hasShortcode = preg_match_all('/' . $pattern . '/s', $post->post_content, $matches)
-                    && array_key_exists(2, $matches)
-                    && in_array($this->shortcode, $matches[2]);
-    return $hasShortcode;
+    // if we don't already have an array of shortcodes create one
+    $codes = is_array($this->shortcode) ? $this->shortcode : array($this->shortcode);
+
+    foreach($codes as $code)
+    {
+      $hasShortcode = preg_match_all('/' . $pattern . '/s', $post->post_content, $matches)
+                      && array_key_exists(2, $matches)
+                      && in_array($code, $matches[2]);
+      if($hasShortcode)
+      {
+        debug_log("A Gravity Form was detected!");
+        // as soon as we find one, exit the loop and notify caller
+        return true;
+      }
+    }
+    // no shortcode was found
+    return false;
   }
 
   /**
@@ -150,7 +162,7 @@ class requireAuthentication
       if (phpCAS::checkAuthentication())
       {
         debug_log("Authentication successful (" . phpCAS::getUser() . ")...");
-        $this->current_user = phpCAS::getUser();
+        $this->currentUser = phpCAS::getUser();
         return true;
       }
       else

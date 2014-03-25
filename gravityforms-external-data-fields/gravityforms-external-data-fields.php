@@ -18,4 +18,4 @@ function change_upload_path($path_info, $form_id){
 }
 
 require_once("requireAuthentication.php");
-requireAuthentication::setup("gravityform");
+requireAuthentication::setup(array("gravityform","gravityforms"));
