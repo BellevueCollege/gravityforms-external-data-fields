@@ -39,6 +39,9 @@ function debug_log($message)
   }
 }
 
+/**
+ * @return string
+ */
 function site_name()
 {
   if (is_multisite())
@@ -53,6 +56,9 @@ function site_name()
   }
 }
 
+/**
+ * @param $class
+ */
 function class_autoloader($class)
 {
   $classFile = dirname(__FILE__) . "/" . $class . ".php";
@@ -69,4 +75,14 @@ function class_autoloader($class)
   }
 }
 
-?>
+/**
+ * @param $class
+ * @param $constant
+ *
+ * @return bool
+ */
+function class_has_constant($class, $constant)
+{
+  $class = new ReflectionClass($class);
+  return $class->hasConstant($constant);
+}

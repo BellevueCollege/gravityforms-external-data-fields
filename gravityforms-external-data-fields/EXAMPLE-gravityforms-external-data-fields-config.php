@@ -1,10 +1,13 @@
 <?php
 // TODO: make a copy of this file w/ the 'EXAMPLE-' prefix removed, then uncomment the following lines & add your settings
 
-//$file_upload_path = "/var/www/files/"; // Set this to physical path of the directory
-//$file_upload_url = "http://example.com/files/"; // Set this to the url of the directory
-
 /*
+// TODO: the following setting can be removed when CAS has been
+$gfedf_phpcas_path = "";
+
+$file_upload_path = "/var/www/files/"; // Set this to physical path of the directory
+$file_upload_url = "http://example.com/files/"; // Set this to the url of the directory
+
 class gf_external_data_fields_config
 {
   // See http://docs.php.net/manual/en/ref.pdo-odbc.connection.php
@@ -13,19 +16,22 @@ class gf_external_data_fields_config
   public $studentDataLogin = "";
   public $studentDataPassword = "";
 
-  public static $studentQuery = "";
+  public static $studentQuery = <<<EOS
+SELECT statement
+EOS;
 }
+
+// SQL column names
+public static $sqlColumnStudentID = "SID";
+public static $sqlColumnFirstName = "FirstName";
+public static $sqlColumnLastName = "LastName";
+public static $sqlColumnEmailAddress = "Email";
+public static $sqlColumnDaytimePhone = "DaytimePhone";
+public static $sqlColumnEveningPhone = "EveningPhone";
+
+// SSO settings
+public static $ssoServer = "examplecasserver.com";
+public static $ssoPort = 443;
+public static $ssoPath = "/cas";
+
 //*/
-
-//class autoFillSettings
-//{
-//  // Connection string
-//  public $connection = "";
-//  // Table name, stored procedure or SELECT statement
-//  public $command = "";
-//  // List of mappings - from the database column name to the form field
-//  public $mappings = array(
-//    "fieldID" => "columnName"
-//  );
-//}
-

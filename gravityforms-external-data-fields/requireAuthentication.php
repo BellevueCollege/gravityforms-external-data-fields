@@ -21,9 +21,15 @@ if(file_exists($gfedf_phpcas_path))
 
 /**
  * Class requireAuthentication
+ *
+ * This class currently performs SSO authentication via Jasig CAS, but it is not
+ * required to. To use another authentication system replace the CAS code with
+ * appropriate code for your system.
  */
 class requireAuthentication
 {
+  const SESSION_USERNAME = "authenticated_username";
+
   protected $authenticationForced = false;
   protected $shortcode;
   protected $currentUser;
@@ -39,6 +45,8 @@ class requireAuthentication
     $this->shortcode = $post_shortcode;
     $this->enableDebug = $enableDebug;
 
+    // This check needs to run early enough in the WordPress page flow that a redirect (to the login page)
+    // can occur before any content is written to the HTTP Response.
     add_action( 'wp', array($this, "forceAuthentication") );
 
     $this->ssoInitialize();
@@ -57,7 +65,7 @@ class requireAuthentication
       debug_log("Checking if authenticated...");
       if ($this->ssoAuthenticated())
       {
-        $_SESSION[gf_external_data_fields_config::SESSION_USERNAME] = $this->currentUser;
+        $_SESSION[requireAuthentication::SESSION_USERNAME] = $this->currentUser;
         debug_log("...username '" . requireAuthentication::getCurrentUser() . "' saved.");
       }
     }
@@ -78,7 +86,7 @@ class requireAuthentication
    */
   static function getCurrentUser()
   {
-    return $_SESSION[gf_external_data_fields_config::SESSION_USERNAME];
+    return $_SESSION[requireAuthentication::SESSION_USERNAME];
   }
 
   /**
@@ -87,8 +95,8 @@ class requireAuthentication
   static function isAuthenticated()
   {
 
-    return (!(is_null($_SESSION[gf_external_data_fields_config::SESSION_USERNAME])) &&
-            ($_SESSION[gf_external_data_fields_config::SESSION_USERNAME] != ""));
+    return (!(is_null($_SESSION[requireAuthentication::SESSION_USERNAME])) &&
+            ($_SESSION[requireAuthentication::SESSION_USERNAME] != ""));
   }
 
   /**
@@ -128,10 +136,9 @@ class requireAuthentication
    */
   private function ssoInitialize()
   {
-    if ($this->enableDebug)
+    if (($this->enableDebug) && (ENABLE_DEBUG_LOG))
     {
-      // TODO: make log file configurable
-      phpCAS::setDebug("/var/tmp/gravityforms-external-data-fields-debug.log");
+      phpCAS::setDebug(DEBUG_LOG_PATH);
     }
 
     try
@@ -141,10 +148,10 @@ class requireAuthentication
                      gf_external_data_fields_config::$ssoPort,
                      gf_external_data_fields_config::$ssoPath);
     }
-    catch (Exception $e)
+    catch (Exception $ex)
     {
       debug_log("CAS client initialization failed. See error log.");
-      error_log("gfedf: Failed to initialize CAS! [" . $e->getCode() . "] " . $e->getMessage() . "\n" . $e->getTraceAsString());
+      $this->logError("Failed to initialize CAS!", $ex);
     }
   }
 
@@ -186,13 +193,22 @@ class requireAuthentication
         }
       }
     }
-    catch (Exception $e)
+    catch (Exception $ex)
     {
       debug_log("Unknown problem authenticating user. See error log.");
-      error_log("gfedf: Encountered a problem trying to authenticate the user! [".$e->getCode()."] ".$e->getMessage()."\n".$e->getTraceAsString());
+      $this->logError("Encountered a problem trying to authenticate the user!", $ex);
     }
 
     debug_log("ssoAuthenticated() returning FALSE");
     return false;
+  }
+
+  /**
+   * @param           $message
+   * @param Exception $ex
+   */
+  private function logError($message, Exception $ex)
+  {
+    error_log("gfedf: ".$message." [" . $ex->getCode() . "] " . $ex->getMessage() . "\n" . $ex->getTraceAsString());
   }
 }
