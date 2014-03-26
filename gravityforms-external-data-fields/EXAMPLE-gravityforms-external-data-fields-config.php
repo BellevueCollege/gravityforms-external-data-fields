@@ -12,6 +12,7 @@ class gf_external_data_fields_config
   const IS_AUTH = "is_auth"; // Set the parameter name of the authenticated text field from the form
   const IS_VERIFIED_MESSAGE = "VERIFIED SUBMISSION - This individual has confirmed their identity by logging in with their NetID. "; // Set this to a message stating the user is authenticated
   const IS_NOT_VERIFIED_MESSAGE = "NOT VERIFIED";// Set this to a message stating the user is not authenticated
+  const AUTH_REQUIRED_PAGE = 'gforms-auth-required.php';  // relative to the plugin root
 
   // See http://docs.php.net/manual/en/ref.pdo-dblib.connection.php
   public static $dsn = "";

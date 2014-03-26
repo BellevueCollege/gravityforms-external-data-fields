@@ -68,6 +68,12 @@ class requireAuthentication
         $_SESSION[requireAuthentication::SESSION_USERNAME] = $this->currentUser;
         debug_log("...username '" . requireAuthentication::getCurrentUser() . "' saved.");
       }
+      else
+      {
+        $authRequiredPage = plugins_url(gf_external_data_fields_config::AUTH_REQUIRED_PAGE, __FILE__);
+        debug_log("Authentication failed. Redirecting to <$authRequiredPage>...");
+        wp_redirect($authRequiredPage);
+      }
     }
   }
 
