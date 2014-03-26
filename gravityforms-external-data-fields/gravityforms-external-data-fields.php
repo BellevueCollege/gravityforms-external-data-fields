@@ -17,10 +17,14 @@ error_reporting(E_ALL ^ E_NOTICE); // Report all errors except E_NOTICE
 add_filter("gform_upload_path", "change_upload_path", 10, 2);
 function change_upload_path($path_info, $form_id){
 
-    $path_info["path"] = defined(gf_external_data_fields_config::FILE_UPLOAD_PATH)? gf_external_data_fields_config::FILE_UPLOAD_PATH : "";
-    $path_info["url"] = defined(gf_external_data_fields_config::FILE_UPLOAD_URL) ? gf_external_data_fields_config::FILE_UPLOAD_URL : "";
+    $path_info["path"] = defined('gf_external_data_fields_config::FILE_UPLOAD_PATH')? gf_external_data_fields_config::FILE_UPLOAD_PATH : "";
+    $path_info["url"] = defined('gf_external_data_fields_config::FILE_UPLOAD_URL') ? gf_external_data_fields_config::FILE_UPLOAD_URL : "";
+
     return $path_info;
 }
+
+require_once("requireAuthentication.php");
+requireAuthentication::setup(array("gravityform","gravityforms"));
 
 
 // This function edits the notification message if the authentication field is not present in the form.
@@ -72,7 +76,7 @@ function populate_auth_field()
 {
 
     $text =  defined('gf_external_data_fields_config::IS_NOT_VERIFIED_MESSAGE')? gf_external_data_fields_config::IS_NOT_VERIFIED_MESSAGE : "Not Authenticated";
-    if(defined('gf_external_data_fields_config::SESSION_USERNAME') && !empty($_SESSION[gf_external_data_fields_config::SESSION_USERNAME]))
+    if(defined('gf_external_data_fields_config::SESSION_USERNAME') && !empty($_SESSION[requireAuthentication::SESSION_USERNAME]))
         $text = defined('gf_external_data_fields_config::IS_VERIFIED_MESSAGE') ? gf_external_data_fields_config::IS_VERIFIED_MESSAGE : "Authenticated";
 
     return $text;
