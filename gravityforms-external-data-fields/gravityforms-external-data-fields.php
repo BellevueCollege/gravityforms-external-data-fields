@@ -19,6 +19,7 @@ function change_upload_path($path_info, $form_id){
 
     $path_info["path"] = defined('gf_external_data_fields_config::FILE_UPLOAD_PATH')? gf_external_data_fields_config::FILE_UPLOAD_PATH : "";
     $path_info["url"] = defined('gf_external_data_fields_config::FILE_UPLOAD_URL') ? gf_external_data_fields_config::FILE_UPLOAD_URL : "";
+
     return $path_info;
 }
 
