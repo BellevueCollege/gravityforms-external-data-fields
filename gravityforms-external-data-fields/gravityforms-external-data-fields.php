@@ -76,7 +76,7 @@ function populate_auth_field()
 {
 
     $text =  defined('gf_external_data_fields_config::IS_NOT_VERIFIED_MESSAGE')? gf_external_data_fields_config::IS_NOT_VERIFIED_MESSAGE : "Not Authenticated";
-    if(defined('gf_external_data_fields_config::SESSION_USERNAME') && !empty($_SESSION[requireAuthentication::SESSION_USERNAME]))
+    if(defined('requireAuthentication::SESSION_USERNAME') && !empty($_SESSION[requireAuthentication::SESSION_USERNAME]))
         $text = defined('gf_external_data_fields_config::IS_VERIFIED_MESSAGE') ? gf_external_data_fields_config::IS_VERIFIED_MESSAGE : "Authenticated";
 
     return $text;
