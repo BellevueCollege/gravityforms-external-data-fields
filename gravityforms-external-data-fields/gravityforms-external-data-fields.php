@@ -22,6 +22,9 @@ function change_upload_path($path_info, $form_id){
     return $path_info;
 }
 
+require_once("requireAuthentication.php");
+requireAuthentication::setup(array("gravityform","gravityforms"));
+
 
 // This function edits the notification message if the authentication field is not present in the form.
 
@@ -72,7 +75,7 @@ function populate_auth_field()
 {
 
     $text =  defined('gf_external_data_fields_config::IS_NOT_VERIFIED_MESSAGE')? gf_external_data_fields_config::IS_NOT_VERIFIED_MESSAGE : "Not Authenticated";
-    if(defined('gf_external_data_fields_config::SESSION_USERNAME') && !empty($_SESSION[gf_external_data_fields_config::SESSION_USERNAME]))
+    if(defined('gf_external_data_fields_config::SESSION_USERNAME') && !empty($_SESSION[requireAuthentication::SESSION_USERNAME]))
         $text = defined('gf_external_data_fields_config::IS_VERIFIED_MESSAGE') ? gf_external_data_fields_config::IS_VERIFIED_MESSAGE : "Authenticated";
 
     return $text;
