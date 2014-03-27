@@ -23,19 +23,24 @@ class gf_external_data_fields_config
   public static $studentQuery = <<<EOS
 SELECT statement
 EOS;
+
+  // SQL column names
+  public static $sqlColumnStudentID = "SID";
+  public static $sqlColumnFirstName = "FirstName";
+  public static $sqlColumnLastName = "LastName";
+  public static $sqlColumnEmailAddress = "Email";
+  public static $sqlColumnDaytimePhone = "DaytimePhone";
+  public static $sqlColumnEveningPhone = "EveningPhone";
+
+  // SSO settings
+  public static $ssoServer = "examplecasserver.com";
+  public static $ssoPort = 443;
+  public static $ssoPath = "/cas";
+  public static $authenticationRequiredMessage = <<<EOH
+<p class='warning'>
+  You must be logged in to use this form.
+</p>
+EOH;
 }
-
-// SQL column names
-public static $sqlColumnStudentID = "SID";
-public static $sqlColumnFirstName = "FirstName";
-public static $sqlColumnLastName = "LastName";
-public static $sqlColumnEmailAddress = "Email";
-public static $sqlColumnDaytimePhone = "DaytimePhone";
-public static $sqlColumnEveningPhone = "EveningPhone";
-
-// SSO settings
-public static $ssoServer = "examplecasserver.com";
-public static $ssoPort = 443;
-public static $ssoPath = "/cas";
 
 //*/
