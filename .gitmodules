@@ -1,0 +1,3 @@
+[submodule "gravityforms-external-data-fields/cas"]
+	path = gravityforms-external-data-fields/cas
+	url = https://github.com/Jasig/phpCAS.git
