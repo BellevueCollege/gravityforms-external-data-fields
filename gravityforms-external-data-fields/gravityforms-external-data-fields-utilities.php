@@ -9,7 +9,7 @@
 
 // Disable to turn off debug logging
 define("ENABLE_DEBUG_LOG", true);
-define("DEBUG_LOG_PATH", "/var/tmp/gravityforms-external-data-fields-debug.log");
+define("DEBUG_LOG_PATH", dirname(__FILE__)."/debug.log");
 
 /**
  * @param $haystack

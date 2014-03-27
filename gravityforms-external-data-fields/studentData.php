@@ -6,6 +6,7 @@
  * Time: 7:20 PM
  */
 require_once("gravityforms-external-data-fields-config.php");
+require_once("gravityforms-external-data-fields-utilities.php");
 
 class studentData
 {
@@ -30,11 +31,13 @@ class studentData
     // retrieve student info from database
     try
     {
+      debug_log("Connecting to '".gf_external_data_fields_config::$dsn."'...");
       $dbh = new PDO(gf_external_data_fields_config::$dsn,
                      gf_external_data_fields_config::$studentDataLogin,
                      gf_external_data_fields_config::$studentDataPassword);
 
       $query = $dbh->prepare(gf_external_data_fields_config::$studentQuery);
+      debug_log("Executing SQL query for username '$this->username'...'\n".gf_external_data_fields_config::$studentQuery);
       $query->execute(array($this->username));
 
       if($query)
@@ -51,6 +54,8 @@ class studentData
           $this->emailAddress = $rs[gf_external_data_fields_config::$sqlColumnEmailAddress];
           $this->phoneDaytime = $rs[gf_external_data_fields_config::$sqlColumnDaytimePhone];
           $this->phoneEvening = $rs[gf_external_data_fields_config::$sqlColumnEveningPhone];
+
+          debug_log("Successfully retrieved student info: $this->studentID, $this->firstName $this->lastName, $this->emailAddress");
         }
         else
         {
@@ -65,6 +70,7 @@ class studentData
     catch(PDOException $ex)
     {
       $err = error_get_last();
+      debug_log("An exception occurred while retrieving student data! See error log.");
       $this->logError("Failed to retrieve student data: ". $ex->getCode() .": '".$ex->getMessage()."' Trace: ".$ex->getTraceAsString());
       $this->logError("Connection: ". (($dbh != null) ? $dbh->errorInfo() : "null"));
       $this->logError("Last PHP error: ". $err);
