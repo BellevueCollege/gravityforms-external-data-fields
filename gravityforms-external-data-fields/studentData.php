@@ -22,8 +22,14 @@ class studentData
   private $username = "";
   private $domain = studentData::UNSPECIFIED_DOMAIN;
 
-  function __construct($login)
+  function __construct($login = "")
   {
+    if((!isset($login)) || is_null($login) || empty($login))
+    {
+      // parameterless constructor exists to be able to declare a global variable of $self that can be referenced later
+      return null;
+    }
+
     $this->username = $this->extractUsername($login);
     $dbh = null;
     $this->hasStudentRecord = false;
