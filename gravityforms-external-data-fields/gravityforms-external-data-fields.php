@@ -11,9 +11,12 @@ Author URI: http://www.bellevuecollege.edu
 require_once("gravityforms-external-data-fields-config.php");
 require_once("studentData.php");
 
+require_once("requireAuthentication.php");
+requireAuthentication::setup(array("gravityform","gravityforms"));
+
 error_reporting(E_ALL ^ E_NOTICE); // Report all errors except E_NOTICE
 
-$gfedf_studentdata = new studentData('');
+$gfedf_studentdata = new studentData(requireAuthentication::getCurrentUser());
 
 // This function will update the default path and url of the file storage location
 
@@ -93,9 +96,6 @@ function change_upload_path($path_info, $form_id){
 		$bc_evephone = $gfedf_studentdata->getEveningPhone();
 		return $bc_evephone;
 	}
-
-require_once("requireAuthentication.php");
-requireAuthentication::setup(array("gravityform","gravityforms"));
 
 
 // This function edits the notification message if the authentication field is not present in the form.
