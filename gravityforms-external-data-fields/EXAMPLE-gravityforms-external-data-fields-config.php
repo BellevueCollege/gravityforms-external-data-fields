@@ -3,7 +3,7 @@
 
 /* NOTE: commenting just this line will expose the code
 // TODO: the following setting can be removed when CAS has been
-$gfedf_phpcas_path = "";
+$gfedf_phpcas_path = dirname(__FILE__). "/cas/CAS.php";
 
 class gf_external_data_fields_config
 {
