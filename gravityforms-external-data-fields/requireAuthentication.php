@@ -70,11 +70,30 @@ class requireAuthentication
       }
       else
       {
-        $authRequiredPage = plugins_url(gf_external_data_fields_config::AUTH_REQUIRED_PAGE, __FILE__);
-        debug_log("Authentication failed. Redirecting to <$authRequiredPage>...");
-        wp_redirect($authRequiredPage);
+        add_filter( 'the_content', array($this, 'displayAuthenticationRequired' ));
       }
     }
+  }
+
+  /**
+   * @param $content
+   *
+   * @return string
+   */
+  function displayAuthenticationRequired($content)
+  {
+    if(isset(gf_external_data_fields_config::$authenticationRequiredMessage))
+    {
+      debug_log("authenticationRequiredMessage is set...");
+      $content = gf_external_data_fields_config::$authenticationRequiredMessage;
+    }
+    else
+    {
+      debug_log("authenticationRequiredMessage is NOT set. Using default message...");
+      $content = "<strong>You must be logged in to use this form.</strong>";
+    }
+    debug_log("content = '$content'");
+    return $content;
   }
 
   /**
