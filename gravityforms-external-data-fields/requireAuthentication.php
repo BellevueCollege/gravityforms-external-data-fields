@@ -68,7 +68,32 @@ class requireAuthentication
         $_SESSION[requireAuthentication::SESSION_USERNAME] = $this->currentUser;
         debug_log("...username '" . requireAuthentication::getCurrentUser() . "' saved.");
       }
+      else
+      {
+        add_filter( 'the_content', array($this, 'displayAuthenticationRequired' ));
+      }
     }
+  }
+
+  /**
+   * @param $content
+   *
+   * @return string
+   */
+  function displayAuthenticationRequired($content)
+  {
+    if(isset(gf_external_data_fields_config::$authenticationRequiredMessage))
+    {
+      debug_log("authenticationRequiredMessage is set...");
+      $content = gf_external_data_fields_config::$authenticationRequiredMessage;
+    }
+    else
+    {
+      debug_log("authenticationRequiredMessage is NOT set. Using default message...");
+      $content = "<strong>You must be logged in to use this form.</strong>";
+    }
+    debug_log("content = '$content'");
+    return $content;
   }
 
   /**
