@@ -22,9 +22,9 @@ class studentData
   private $username = "";
   private $domain = studentData::UNSPECIFIED_DOMAIN;
 
-  function __construct($login = "")
+  function __construct($login = null)
   {
-    if((!isset($login)) || is_null($login) || empty($login))
+    if(is_null($login))
     {
       // parameterless constructor exists to be able to declare a global variable of $self that can be referenced later
       return null;

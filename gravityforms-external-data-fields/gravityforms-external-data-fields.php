@@ -43,10 +43,16 @@ add_action( 'wp_enqueue_scripts', 'gfedf_disable_input_fields' );
 $gfedf_studentdata = new studentData();
 function gfedf_get_student_data()
 {
+  debug_log("(wp) Getting student data...");
+
   global $gfedf_studentdata;
-  $gfedf_studentdata = new studentData(requireAuthentication::getCurrentUser());
+  $username = requireAuthentication::getCurrentUser();
+  debug_log("Current user is '$username'");
+  $gfedf_studentdata = new studentData($username);
+  debug_log("StudentData:\n".print_r($gfedf_studentdata, true));
 }
-add_action("init", "gfedf_get_student_data");
+// This action needs to run AFTER the user has been identified by the requireAuthentication class
+add_action("wp", "gfedf_get_student_data", 20);
 
 #########################
 // Pre-populate Fields
@@ -58,48 +64,66 @@ add_action("init", "gfedf_get_student_data");
 	// SID
 	add_filter('gform_field_value_bc_sid', 'populate_bc_sid');
 	function populate_bc_sid($value){
+    debug_log("(= gform_field_value_bc_sid =) Setting SID...");
+
     global $gfedf_studentdata;
     $bc_sid = $gfedf_studentdata->getStudentID();
+    debug_log("...'$bc_sid'");
 		return $bc_sid;
 	}
 
 	// First Name
 	add_filter('gform_field_value_bc_first_name', 'populate_bc_first_name');
 	function populate_bc_first_name($value){
+    debug_log("(= gform_field_value_bc_first_name =) Setting first name...");
+
     global $gfedf_studentdata;
 		$bc_first_name = $gfedf_studentdata->getFirstName();
+    debug_log("...'$bc_first_name'");
 		return $bc_first_name;
 	}
 
 	// First Name
 	add_filter('gform_field_value_bc_last_name', 'populate_bc_last_name');
 	function populate_bc_last_name($value){
+    debug_log("(= gform_field_value_bc_last_name =) Setting last name...");
+
     global $gfedf_studentdata;
 		$bc_last_name = $gfedf_studentdata->getLastName();
+    debug_log("...'$bc_last_name'");
 		return $bc_last_name;
 	}
 
 	// BC Email
 	add_filter('gform_field_value_bc_email', 'populate_bc_email');
 	function populate_bc_email($value){
+    debug_log("(= gform_field_value_bc_email =) Setting e-mail...");
+
     global $gfedf_studentdata;
 		$bc_email = $gfedf_studentdata->getEmailAddress();
+    debug_log("...'$bc_email'");
 		return $bc_email;
 	}
 
 	// Day Phone
 	add_filter('gform_field_value_bc_dayphone', 'populate_bc_dayphone');
 	function populate_bc_dayphone($value){
+    debug_log("(= gform_field_value_bc_dayphone =) Setting daytime phone...");
+
     global $gfedf_studentdata;
 		$bc_dayphone = $gfedf_studentdata->getDaytimePhone();
+    debug_log("...'$bc_dayphone'");
 		return $bc_dayphone;
 	}
 
 	// Evening Phone
 	add_filter('gform_field_value_bc_evephone', 'populate_bc_evephone');
 	function populate_bc_evephone($value){
+    debug_log("(= gform_field_value_bc_evephone =) Setting evening phone...");
+
     global $gfedf_studentdata;
 		$bc_evephone = $gfedf_studentdata->getEveningPhone();
+    debug_log("...'$bc_evephone'");
 		return $bc_evephone;
 	}
 
