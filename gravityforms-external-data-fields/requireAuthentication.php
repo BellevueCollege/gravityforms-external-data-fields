@@ -47,15 +47,15 @@ class requireAuthentication
 
     // This check needs to run early enough in the WordPress page flow that a redirect (to the login page)
     // can occur before any content is written to the HTTP Response.
-    add_action( 'wp', array($this, "forceAuthentication") );
+    add_action( 'wp', array($this, "forceAuthentication"), 1 );
 
     $this->ssoInitialize();
   }
 
   /**
-   * @param $wp
+   *
    */
-  function forceAuthentication($wp)
+  function forceAuthentication()
   {
     // reset flag
     $this->authenticationForced = false;
@@ -199,22 +199,22 @@ class requireAuthentication
       }
       else
       {
+        debug_log("... failed...");
         if (!($this->authenticationForced))
         {
-          debug_log("Not already authenticated. Forcing login...");
+          debug_log("Redirecting to login server...");
           // redirect user to login page
           phpCAS::forceAuthentication();
           // set flag so we don't get caught in an endless loop
           $this->authenticationForced = true;
           // ...and check again.
+          debug_log("Recursively calling to verify user has authenticated...");
           return $this->ssoAuthenticated();
         }
         else
         {
           debug_log("Second attempt at authentication failed. See error log.");
           error_log("Forcing authentication failed. Unable to log user in.");
-
-          // TODO: what is the user experience if they can't/don't log in?
         }
       }
     }
