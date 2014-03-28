@@ -28,25 +28,25 @@ function change_upload_path($path_info, $form_id){
 }
 
 // Stylesheet - loaded the WordPress way
-	wp_enqueue_script( "gravityforms-external-data-fields-style", plugins_url( "/css/style.css", __FILE__));
-
+function gfedf_load_stylesheets() {
+  wp_enqueue_script( "gravityforms-external-data-fields-style", plugins_url( "/css/style.css", __FILE__));
+}
+add_action( 'wp_enqueue_scripts', 'gfedf_load_stylesheets' );
 
 // Make Gravity Forms fields Read-only
-	function gfedf_disable_input_fields() {
-		wp_register_script('gravityforms-disable-fields', plugins_url('/js/gravityforms-disable-fields.js', __FILE__), array('jquery'),'', true);
-		wp_enqueue_script('gravityforms-disable-fields');
-	}
-
-	add_action( 'wp_enqueue_scripts', 'gfedf_disable_input_fields' );
+function gfedf_disable_input_fields() {
+  wp_register_script('gravityforms-disable-fields', plugins_url('/js/gravityforms-disable-fields.js', __FILE__), array('jquery'),'', true);
+  wp_enqueue_script('gravityforms-disable-fields');
+}
+add_action( 'wp_enqueue_scripts', 'gfedf_disable_input_fields' );
 
 $gfedf_studentdata = new studentData();
-
-add_action("init", "gfedf_get_student_data");
 function gfedf_get_student_data()
 {
   global $gfedf_studentdata;
   $gfedf_studentdata = new studentData(requireAuthentication::getCurrentUser());
 }
+add_action("init", "gfedf_get_student_data");
 
 #########################
 // Pre-populate Fields
