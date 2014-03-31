@@ -20,9 +20,11 @@ error_reporting(E_ALL ^ E_NOTICE); // Report all errors except E_NOTICE
 
 add_filter("gform_upload_path", "change_upload_path", 10, 2);
 function change_upload_path($path_info, $form_id){
-
-    $path_info["path"] = defined('gf_external_data_fields_config::FILE_UPLOAD_PATH')? gf_external_data_fields_config::FILE_UPLOAD_PATH : "";
-    $path_info["url"] = defined('gf_external_data_fields_config::FILE_UPLOAD_URL') ? gf_external_data_fields_config::FILE_UPLOAD_URL : "";
+    if(defined('gf_external_data_fields_config::FILE_UPLOAD_PATH') && defined('gf_external_data_fields_config::FILE_UPLOAD_PATH'))
+    {
+        $path_info["path"] =  gf_external_data_fields_config::FILE_UPLOAD_PATH ;
+        $path_info["url"] =  gf_external_data_fields_config::FILE_UPLOAD_URL ;
+    }
 
     return $path_info;
 }
