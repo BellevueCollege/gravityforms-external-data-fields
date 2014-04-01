@@ -9,7 +9,7 @@ class gf_external_data_fields_config
 {
   const FILE_UPLOAD_PATH = "/uploads/"; // Set this to physical path of the directory
   const FILE_UPLOAD_URL = "http://example.com/uploads/"; // Set this to the url of the directory
-  const IS_AUTH = "is_auth"; // Set the parameter name of the authenticated text field from the form
+  const IS_AUTH = "is_auth"; // Set the parameter name of the authenticated text field from the form. This field is case-sensitive.
   const IS_VERIFIED_MESSAGE = "VERIFIED SUBMISSION - This individual has confirmed their identity by logging in with their NetID. "; // Set this to a message stating the user is authenticated
   const IS_NOT_VERIFIED_MESSAGE = "NOT VERIFIED";// Set this to a message stating the user is not authenticated
 

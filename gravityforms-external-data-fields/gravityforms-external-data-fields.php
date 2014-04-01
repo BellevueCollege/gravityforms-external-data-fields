@@ -22,8 +22,13 @@ add_filter("gform_upload_path", "change_upload_path", 10, 2);
 function change_upload_path($path_info, $form_id){
     if(defined('gf_external_data_fields_config::FILE_UPLOAD_PATH') && defined('gf_external_data_fields_config::FILE_UPLOAD_PATH'))
     {
-        $path_info["path"] =  gf_external_data_fields_config::FILE_UPLOAD_PATH ;
-        $path_info["url"] =  gf_external_data_fields_config::FILE_UPLOAD_URL ;
+        //Check for trailing slash
+        $path = gf_external_data_fields_config::FILE_UPLOAD_PATH;
+        $url = gf_external_data_fields_config::FILE_UPLOAD_URL;
+        $path .= (substr($path, -1) == '/' ? '' : '/');
+        $url .= (substr($url, -1) == '/' ? '' : '/');
+        $path_info["path"] =  $path ;
+        $path_info["url"] =  $url ;
     }
 
     return $path_info;
