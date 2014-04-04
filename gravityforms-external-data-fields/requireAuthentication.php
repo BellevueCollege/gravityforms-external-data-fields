@@ -73,6 +73,7 @@ class requireAuthentication
         add_filter( 'the_content', array($this, 'displayAuthenticationRequired' ));
       }
     }
+
   }
 
   /**
@@ -136,10 +137,9 @@ class requireAuthentication
     global $post;
     // get standard regex pattern for shortcodes
     $pattern = get_shortcode_regex();
-
+    $matches = array();
     // if we don't already have an array of shortcodes create one
     $codes = is_array($this->shortcode) ? $this->shortcode : array($this->shortcode);
-
     foreach($codes as $code)
     {
       $hasShortcode = preg_match_all('/' . $pattern . '/s', $post->post_content, $matches)
@@ -147,9 +147,32 @@ class requireAuthentication
                       && in_array($code, $matches[2]);
       if($hasShortcode)
       {
-        debug_log("A Gravity Form was detected!");
-        // as soon as we find one, exit the loop and notify caller
-        return true;
+
+          if(!empty($matches))
+          {
+              $attributes = $matches[3];
+              //debug_log("attributes string :".$attributes[0]);
+
+              if(defined('gf_external_data_fields_config::AUTHENTICATE_ATTRIBUTE') && !empty($attributes[0]))
+              {
+                  $auth_attr = gf_external_data_fields_config::AUTHENTICATE_ATTRIBUTE;
+                  $regex = "/$auth_attr\s*=\s*\"\s*(\S*)\s*\"/i";
+
+                  $hasAuthParam = preg_match($regex, $attributes[0], $matches);
+                  //debug_log("regex :".$regex);
+                  //debug_log("hasAuthParam :".$hasAuthParam);
+                  //debug_log("matched array:".print_r($matches,true));
+
+
+                  if( isset($matches[1])  &&  strtolower($matches[1]) == 'true')
+                  {
+                      //Force authentication
+                      debug_log("Force Authentication is true");
+                      return true;
+                  }
+
+              }
+          }
       }
     }
     // no shortcode was found
