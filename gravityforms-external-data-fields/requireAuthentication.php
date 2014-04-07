@@ -48,8 +48,7 @@ class requireAuthentication
     // This check needs to run early enough in the WordPress page flow that a redirect (to the login page)
     // can occur before any content is written to the HTTP Response.
     add_action( 'wp', array($this, "forceAuthentication"), 1 );
-
-    $this->ssoInitialize();
+        $this->ssoInitialize();
   }
 
   /**
@@ -72,6 +71,10 @@ class requireAuthentication
       {
         add_filter( 'the_content', array($this, 'displayAuthenticationRequired' ));
       }
+    }
+    else
+    {
+
     }
 
   }
@@ -125,6 +128,7 @@ class requireAuthentication
             ($_SESSION[requireAuthentication::SESSION_USERNAME] != ""));
   }
 
+
   /**
    * @internal param $pattern
    * @internal param $post
@@ -169,6 +173,10 @@ class requireAuthentication
                       //Force authentication
                       debug_log("Force Authentication is true");
                       return true;
+                  }
+                  else
+                  {
+                      unset($_SESSION[requireAuthentication::SESSION_USERNAME]);
                   }
 
               }

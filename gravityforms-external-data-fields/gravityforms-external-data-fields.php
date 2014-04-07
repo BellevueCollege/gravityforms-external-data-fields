@@ -4,7 +4,7 @@ Plugin Name: Gravity Forms External Data Fields
 Plugin URI: http://www.bellevuecollege.edu
 Description: Extend Gravity Forms with Bellevue College form field data
 Author: Bellevue College Technology Development and Communications
-Version: 0.0.0.4
+Version: 0.0.0.5
 Author URI: http://www.bellevuecollege.edu
 */
 
@@ -53,10 +53,13 @@ function gfedf_get_student_data()
   debug_log("(wp) Getting student data...");
 
   global $gfedf_studentdata;
-  $username = requireAuthentication::getCurrentUser();
-  debug_log("Current user is '$username'");
-  $gfedf_studentdata = new studentData($username);
-  debug_log("StudentData:\n".print_r($gfedf_studentdata, true));
+  if(requireAuthentication::isAuthenticated())
+  {
+      $username = requireAuthentication::getCurrentUser();
+      debug_log("Current user is '$username'");
+      $gfedf_studentdata = new studentData($username);
+      debug_log("StudentData:\n".print_r($gfedf_studentdata, true));
+  }
 }
 // This action needs to run AFTER the user has been identified by the requireAuthentication class
 add_action("wp", "gfedf_get_student_data", 20);
@@ -184,7 +187,8 @@ function populate_auth_field()
 {
 
     $text =  defined('gf_external_data_fields_config::IS_NOT_VERIFIED_MESSAGE')? gf_external_data_fields_config::IS_NOT_VERIFIED_MESSAGE : "Not Authenticated";
-    if(defined('requireAuthentication::SESSION_USERNAME') && !empty($_SESSION[requireAuthentication::SESSION_USERNAME]))
+
+    if(requireAuthentication::isAuthenticated())//if(requireAuthentication::isAuthenticateSet() && requireAuthentication::isAuthenticated())
         $text = defined('gf_external_data_fields_config::IS_VERIFIED_MESSAGE') ? gf_external_data_fields_config::IS_VERIFIED_MESSAGE : "Authenticated";
 
     return $text;
