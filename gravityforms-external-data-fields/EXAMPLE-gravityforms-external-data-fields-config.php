@@ -13,6 +13,8 @@ class gf_external_data_fields_config
   const IS_VERIFIED_MESSAGE = "VERIFIED SUBMISSION - This individual has confirmed their identity by logging in with their NetID. "; // Set this to a message stating the user is authenticated
   const IS_NOT_VERIFIED_MESSAGE = "NOT VERIFIED";// Set this to a message stating the user is not authenticated
 
+    const AFTER_LOGOUT_URL = "http://example.com/home/"; // This is the redirect used by CAS after user is signed out
+
  const AUTHENTICATE_ATTRIBUTE = "authenticate"; // This parameter should match the attribute name in the shortcode of gravity form. This is case sensitive
   // See http://docs.php.net/manual/en/ref.pdo-dblib.connection.php
   public static $dsn = "";
