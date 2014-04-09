@@ -44,7 +44,8 @@ function debug_log($message)
  */
 function site_name()
 {
-  if (is_multisite())
+
+  if (function_exists ("is_multisite") && is_multisite())
   {
     $current_site = get_current_site();
     return trim($current_site->path, "/");

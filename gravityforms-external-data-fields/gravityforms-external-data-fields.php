@@ -11,10 +11,11 @@ Author URI: http://www.bellevuecollege.edu
 require_once("gravityforms-external-data-fields-config.php");
 require_once("studentData.php");
 require_once("requireAuthentication.php");
-requireAuthentication::setup(array("gravityform","gravityforms"));
-
 error_reporting(E_ALL ^ E_NOTICE); // Report all errors except E_NOTICE
 
+requireAuthentication::setup(array("gravityform","gravityforms"));
+
+error_log("session variable value :".requireAuthentication::isAuthenticated());
 
 // This function will update the default path and url of the file storage location
 

@@ -47,8 +47,11 @@ class requireAuthentication
 
     // This check needs to run early enough in the WordPress page flow that a redirect (to the login page)
     // can occur before any content is written to the HTTP Response.
-    add_action( 'wp', array($this, "forceAuthentication"), 1 );
-        $this->ssoInitialize();
+    if(function_exists("add_action"))
+    {
+        add_action( 'wp', array($this, "forceAuthentication"), 1 );
+            $this->ssoInitialize();
+    }
   }
 
   /**
@@ -259,6 +262,15 @@ class requireAuthentication
     return false;
   }
 
+  public function logout()
+  {
+      $this->ssoInitialize();
+      if(defined("gf_external_data_fields_config::AFTER_LOGOUT_URL"))
+          phpCAS::logoutWithRedirectService(gf_external_data_fields_config::AFTER_LOGOUT_URL) ;
+      else
+          phpCAS::logout();
+  }
+
   /**
    * @param           $message
    * @param Exception $ex
@@ -267,4 +279,6 @@ class requireAuthentication
   {
     error_log("gfedf: ".$message." [" . $ex->getCode() . "] " . $ex->getMessage() . "\n" . $ex->getTraceAsString());
   }
+
+
 }
