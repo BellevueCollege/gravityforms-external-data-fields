@@ -10,13 +10,31 @@ require_once("gravityforms-external-data-fields-utilities.php");
 //region CAS client code
 // The following include is CAS-specific. Replace if you move from CAS.
 // automatically include class files when encountered
-spl_autoload_register('class_autoloader');  // needed by phpCAS
+/*
+ * In order to just include one CAS library, we first look for CAS lib set for Wordpress-CAS-Client plugin.
+ * If that lib is not set, than it will fetch the path from the config file.
+*/
 
+$wpcasldap_include_path = get_site_option('wpcasldap_include_path');
+if(!empty($wpcasldap_include_path))
+    include_once $wpcasldap_include_path;
+else
+{
+    if(file_exists($gfedf_phpcas_path))
+    {
+        // @noinspection PhpIncludeInspection
+        require_once($gfedf_phpcas_path);
+    }
+}
+//spl_autoload_register('class_autoloader');  // needed by phpCAS
+
+/*
 if(file_exists($gfedf_phpcas_path))
 {
-  /** @noinspection PhpIncludeInspection */
+  // @noinspection PhpIncludeInspection
   require_once($gfedf_phpcas_path);
 }
+*/
 //endregion
 
 /**
@@ -50,7 +68,7 @@ class requireAuthentication
     if(function_exists("add_action"))
     {
         add_action( 'wp', array($this, "forceAuthentication"), 1 );
-            $this->ssoInitialize();
+                $this->ssoInitialize();
     }
   }
 
@@ -158,7 +176,6 @@ class requireAuthentication
           if(!empty($matches))
           {
               $attributes = $matches[3];
-              //debug_log("attributes string :".$attributes[0]);
 
               if(defined('gf_external_data_fields_config::AUTHENTICATE_ATTRIBUTE') && !empty($attributes[0]))
               {
@@ -166,10 +183,6 @@ class requireAuthentication
                   $regex = "/$auth_attr\s*=\s*\"\s*(\S*)\s*\"/i";
 
                   $hasAuthParam = preg_match($regex, $attributes[0], $matches);
-                  //debug_log("regex :".$regex);
-                  //debug_log("hasAuthParam :".$hasAuthParam);
-                  //debug_log("matched array:".print_r($matches,true));
-
 
                   if( isset($matches[1])  &&  strtolower($matches[1]) == 'true')
                   {
@@ -202,10 +215,33 @@ class requireAuthentication
 
     try
     {
-      phpCAS::client(CAS_VERSION_2_0,
-                     gf_external_data_fields_config::$ssoServer,
-                     gf_external_data_fields_config::$ssoPort,
-                     gf_external_data_fields_config::$ssoPath);
+      //if(!class_exists('phpCAS') && !isset(phpCAS::$_PHPCAS_CLIENT))
+        if(!isset($_SESSION["CAS_INI"]))
+        {
+            debug_log("CAS client initialization success. See error log.");
+            /*
+             *  Trying to get the CAS settings from Wordpress CAS CLient settings page.
+             * If they are not available it will get the settings from config file.
+             */
+            $wp_hostname = get_site_option('wpcasldap_server_hostname');
+            $wp_port = get_site_option('wpcasldap_server_port');
+            $wp_path = get_site_option('wpcasldap_server_path');
+            $sso_server = !empty($wp_hostname) ? $wp_hostname : gf_external_data_fields_config::$ssoServer;
+            $sso_port = !empty($wp_port) ? $wp_port  : gf_external_data_fields_config::$ssoPort;
+            $sso_path = !empty($wp_path) ? $wp_path  : gf_external_data_fields_config::$ssoPath;
+            phpCAS::client(CAS_VERSION_2_0,
+                $sso_server,
+                intval($sso_port),
+                $sso_path);
+            $_SESSION["CAS_INI"] = true;
+            phpCAS::setNoCasServerValidation();
+
+           /* phpCAS::client(CAS_VERSION_2_0,
+                         gf_external_data_fields_config::$ssoServer,
+                         gf_external_data_fields_config::$ssoPort,
+                         gf_external_data_fields_config::$ssoPath); */
+        }
+
     }
     catch (Exception $ex)
     {
@@ -222,7 +258,7 @@ class requireAuthentication
     try
     {
       // TODO: call phpCAS::setCasServerCACert()
-      phpCAS::setNoCasServerValidation();
+      //phpCAS::setNoCasServerValidation();
 
       debug_log("phpCAS::checkAuthentication()...");
       if (phpCAS::checkAuthentication())
