@@ -8,7 +8,7 @@
  */
 
 // Disable to turn off debug logging
-define("ENABLE_DEBUG_LOG", true);
+define("ENABLE_DEBUG_LOG", false);
 define("DEBUG_LOG_PATH", dirname(__FILE__)."/debug.log");
 
 /**
