@@ -5,37 +5,18 @@
  * Date: 3/24/14
  * Time: 4:08 PM
  */
+
 require_once("gravityforms-external-data-fields-config.php");
 require_once("gravityforms-external-data-fields-utilities.php");
-//region CAS client code
-// The following include is CAS-specific. Replace if you move from CAS.
-// automatically include class files when encountered
-/*
- * In order to just include one CAS library, we first look for CAS lib set for Wordpress-CAS-Client plugin.
- * If that lib is not set, than it will fetch the path from the config file.
-*/
-
-$wpcasldap_include_path = get_site_option('wpcasldap_include_path');
-if(!empty($wpcasldap_include_path))
-    include_once $wpcasldap_include_path;
-else
-{
-    if(file_exists($gfedf_phpcas_path))
-    {
-        // @noinspection PhpIncludeInspection
-        require_once($gfedf_phpcas_path);
-    }
-}
-//spl_autoload_register('class_autoloader');  // needed by phpCAS
 
 /*
-if(file_exists($gfedf_phpcas_path))
-{
-  // @noinspection PhpIncludeInspection
-  require_once($gfedf_phpcas_path);
+ * Check to see if the phpCAS class exsists in our enviroment. If it doesn't
+ * then load the phpCAS library using the $gfedf_phpcas_path configuration
+ * variable.
+ */
+if (!class_exists('phpCAS')) {
+  require_once $gfedf_phpcas_path;
 }
-*/
-//endregion
 
 /**
  * Class requireAuthentication
@@ -68,7 +49,7 @@ class requireAuthentication
     if(function_exists("add_action"))
     {
         add_action( 'wp', array($this, "forceAuthentication"), 1 );
-                $this->ssoInitialize();
+        $this->ssoInitialize();
     }
   }
 
@@ -213,40 +194,22 @@ class requireAuthentication
       phpCAS::setDebug(DEBUG_LOG_PATH);
     }
 
-    try
-    {
-      //if(!class_exists('phpCAS') && !isset(phpCAS::$_PHPCAS_CLIENT))
-        if(!isset($_SESSION["CAS_INI"]))
+    if (!isset(phpCAS::$_PHPCAS_CLIENT)) {
+        try
         {
-            debug_log("CAS client initialization success. See error log.");
-            /*
-             *  Trying to get the CAS settings from Wordpress CAS CLient settings page.
-             * If they are not available it will get the settings from config file.
-             */
-            $wp_hostname = get_site_option('wpcasldap_server_hostname');
-            $wp_port = get_site_option('wpcasldap_server_port');
-            $wp_path = get_site_option('wpcasldap_server_path');
-            $sso_server = !empty($wp_hostname) ? $wp_hostname : gf_external_data_fields_config::$ssoServer;
-            $sso_port = !empty($wp_port) ? $wp_port  : gf_external_data_fields_config::$ssoPort;
-            $sso_path = !empty($wp_path) ? $wp_path  : gf_external_data_fields_config::$ssoPath;
-            phpCAS::client(CAS_VERSION_2_0,
-                $sso_server,
-                intval($sso_port),
-                $sso_path);
-            $_SESSION["CAS_INI"] = true;
+            phpCAS::client(
+                CAS_VERSION_2_0,
+                gf_external_data_fields_config::$ssoServer,
+                gf_external_data_fields_config::$ssoPort,
+                gf_external_data_fields_config::$ssoPath
+            );
             phpCAS::setNoCasServerValidation();
-
-           /* phpCAS::client(CAS_VERSION_2_0,
-                         gf_external_data_fields_config::$ssoServer,
-                         gf_external_data_fields_config::$ssoPort,
-                         gf_external_data_fields_config::$ssoPath); */
         }
-
-    }
-    catch (Exception $ex)
-    {
-      debug_log("CAS client initialization failed. See error log.");
-      $this->logError("Failed to initialize CAS!", $ex);
+        catch (Exception $ex)
+        {
+            debug_log("CAS client initialization failed. See error log.");
+            $this->logError("Failed to initialize CAS!", $ex);
+        }
     }
   }
 
@@ -257,9 +220,6 @@ class requireAuthentication
   {
     try
     {
-      // TODO: call phpCAS::setCasServerCACert()
-      //phpCAS::setNoCasServerValidation();
-
       debug_log("phpCAS::checkAuthentication()...");
       if (phpCAS::checkAuthentication())
       {
