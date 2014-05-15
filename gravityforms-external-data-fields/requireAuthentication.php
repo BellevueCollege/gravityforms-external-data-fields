@@ -16,6 +16,11 @@ require_once("gravityforms-external-data-fields-utilities.php");
  * required to. To use another authentication system replace the CAS code with
  * appropriate code for your system.
  */
+//global $gfedf_phpcas_path;
+if(isset($gfedf_phpcas_path))
+    $GLOBALS["cas_path"] = $gfedf_phpcas_path;
+else
+    echo("Error : CAS library path is not set.");
 class requireAuthentication
 {
   const SESSION_USERNAME = "authenticated_username";
@@ -23,6 +28,7 @@ class requireAuthentication
   protected $authenticationForced = false;
   protected $shortcode;
   protected $currentUser;
+    protected  $cas_path;
 
   public $enableDebug = false;
 
@@ -40,6 +46,7 @@ class requireAuthentication
     if(function_exists("add_action"))
     {
         add_action( 'wp', array($this, "forceAuthentication"), 1 );
+
         $this->ssoInitialize();
     }
   }
@@ -186,25 +193,32 @@ class requireAuthentication
      * configuration variable and configure the phpCAS client settings.
      */
     if (!class_exists('phpCAS')) {
-        global $gfedf_phpcas_path;
-        require_once $gfedf_phpcas_path;
-        if (($this->enableDebug) && (ENABLE_DEBUG_LOG)) {
-            phpCAS::setDebug(DEBUG_LOG_PATH);
-        }
-        try
+        global $cas_path;
+        if(!empty($cas_path))
         {
-            phpCAS::client(
-                CAS_VERSION_2_0,
-                gf_external_data_fields_config::$ssoServer,
-                gf_external_data_fields_config::$ssoPort,
-                gf_external_data_fields_config::$ssoPath
-            );
-            phpCAS::setNoCasServerValidation();
+            require_once $cas_path;
+            if (($this->enableDebug) && (ENABLE_DEBUG_LOG)) {
+                phpCAS::setDebug(DEBUG_LOG_PATH);
+            }
+            try
+            {
+                phpCAS::client(
+                    CAS_VERSION_2_0,
+                    gf_external_data_fields_config::$ssoServer,
+                    gf_external_data_fields_config::$ssoPort,
+                    gf_external_data_fields_config::$ssoPath
+                );
+                phpCAS::setNoCasServerValidation();
+            }
+            catch (Exception $ex)
+            {
+                debug_log("CAS client initialization failed. See error log.");
+                $this->logError("Failed to initialize CAS!", $ex);
+            }
         }
-        catch (Exception $ex)
+        else
         {
-            debug_log("CAS client initialization failed. See error log.");
-            $this->logError("Failed to initialize CAS!", $ex);
+            echo "Error : CAS library path empty";
         }
     }
   }
