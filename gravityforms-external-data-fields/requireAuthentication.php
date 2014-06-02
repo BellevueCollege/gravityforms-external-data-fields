@@ -62,6 +62,7 @@ class requireAuthentication
     if ($this->hasShortcode())
     {
       debug_log("Checking if authenticated...");
+
       if ($this->ssoAuthenticated())
       {
         $_SESSION[requireAuthentication::SESSION_USERNAME] = $this->currentUser;
@@ -78,6 +79,7 @@ class requireAuthentication
     }
 
   }
+
 
   /**
    * @param $content
@@ -151,7 +153,19 @@ class requireAuthentication
                       && in_array($code, $matches[2]);
       if($hasShortcode)
       {
+          /*
+           * Checks if the url to access the form is https or not.
+           */
+          $current_page_url = get_permalink();
+          if(stripos($current_page_url,"https") === false)
+          {
+              $current_page_url = str_replace("http","https",$current_page_url);
+              Header("Location:$current_page_url");
+          }
 
+          /*
+           * Checks for shortcode
+           */
           if(!empty($matches))
           {
               $attributes = $matches[3];
@@ -231,9 +245,19 @@ class requireAuthentication
     try
     {
       debug_log("phpCAS::checkAuthentication()...");
+        /*
+         * Updates service url to have https since CAS does not support http on production
+         */
+        $service_url = phpCAS::getServiceURL();
+        if(stripos($service_url,"https") === false)
+        {
+             $service_url = str_replace("http","https",$service_url);
+             phpCAS::setFixedServiceURL ($service_url);
+        }
+
       if (phpCAS::checkAuthentication())
       {
-        debug_log("Authentication successful (" . phpCAS::getUser() . ")...");
+          debug_log("Authentication successful (" . phpCAS::getUser() . ")...");
         $this->currentUser = phpCAS::getUser();
         return true;
       }
@@ -285,6 +309,5 @@ class requireAuthentication
   {
     error_log("gfedf: ".$message." [" . $ex->getCode() . "] " . $ex->getMessage() . "\n" . $ex->getTraceAsString());
   }
-
 
 }

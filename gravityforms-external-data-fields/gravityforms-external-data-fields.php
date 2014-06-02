@@ -193,3 +193,4 @@ function populate_auth_field()
 
     return $text;
 }
+
