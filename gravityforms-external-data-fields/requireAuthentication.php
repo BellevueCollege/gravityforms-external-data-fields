@@ -202,9 +202,16 @@ class requireAuthentication
   private function ssoInitialize()
   {
     /*
-     * Check to see if the phpCAS class exsists in our enviroment.
+     * Check to see if the phpCAS class exsists in our environment.
      * If it doesn't then load the phpCAS library using the $gfedf_phpcas_path
      * configuration variable and configure the phpCAS client settings.
+     *
+     * NOTE: This assumes that if the phpCAS class does exist in the
+     *       environment that the method phpCAS::client() has been already
+     *       called by another piece of code elsewhere. If the client method
+     *       has not been invoked but the phpCAS class has been imported into
+     *       the environment anyway then this logic would cause the
+     *       requireAuthentication::ssoAuthenticated() method to fail.
      */
     if (!class_exists('phpCAS')) {
         global $cas_path;
