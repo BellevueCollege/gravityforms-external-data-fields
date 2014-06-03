@@ -156,13 +156,9 @@ class requireAuthentication
           /*
            * Checks if the url to access the form is https or not.
            */
-          $current_page_url = get_permalink();
-          if(stripos($current_page_url,"https") === false)
-          {
-              $current_page_url = str_replace("http","https",$current_page_url);
-              Header("Location:$current_page_url");
-          }
-
+          $using_ssl = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' || $_SERVER['SERVER_PORT'] == 443;
+          if(!$using_ssl)
+                header('Location: https://' . $_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI']);
           /*
            * Checks for shortcode
            */
@@ -255,6 +251,7 @@ class requireAuthentication
         /*
          * Updates service url to have https since CAS does not support http on production
          */
+
         $service_url = phpCAS::getServiceURL();
         if(stripos($service_url,"https") === false)
         {
