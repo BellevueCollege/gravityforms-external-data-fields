@@ -14,7 +14,7 @@ class employeeData
         debug_log("Connecting to '".gf_external_data_fields_config::$dsn."'...");
         try
          {
-             //error_log("resultset $this->username :");
+
              if($this->username)
              {
                 $dbh = new PDO(gf_external_data_fields_config::$dsn,
@@ -29,7 +29,7 @@ class employeeData
                 if($query)
                 {
                     $rs = $query->fetch(PDO::FETCH_ASSOC);
-                    //error_log("resultset $this->username :".print_r($rs,true));
+                    
                     if($rs)
                     {
                        //means the user is an employee
