@@ -87,3 +87,4 @@ function class_has_constant($class, $constant)
   $class = new ReflectionClass($class);
   return $class->hasConstant($constant);
 }
+

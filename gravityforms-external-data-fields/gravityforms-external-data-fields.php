@@ -11,16 +11,17 @@ Author URI: http://www.bellevuecollege.edu
 require_once("gravityforms-external-data-fields-config.php");
 require_once("studentData.php");
 require_once("requireAuthentication.php");
+require_once("employeeData.php");
 error_reporting(E_ALL ^ E_NOTICE); // Report all errors except E_NOTICE
 
-requireAuthentication::setup(array("gravityform","gravityforms"));
+$reqiureAOb = requireAuthentication::setup(array("gravityform","gravityforms"));
 
 
 // This function will update the default path and url of the file storage location
 
 add_filter("gform_upload_path", "change_upload_path", 10, 2);
 function change_upload_path($path_info, $form_id){
-    if(defined('gf_external_data_fields_config::FILE_UPLOAD_PATH') && defined('gf_external_data_fields_config::FILE_UPLOAD_PATH'))
+    if(defined('gf_external_data_fields_config::FILE_UPLOAD_PATH') && defined('gf_external_data_fields_config::FILE_UPLOAD_URL'))
     {
         //Check for trailing slash
         $path = gf_external_data_fields_config::FILE_UPLOAD_PATH;
@@ -47,22 +48,79 @@ function gfedf_disable_input_fields() {
 }
 add_action( 'wp_enqueue_scripts', 'gfedf_disable_input_fields' );
 
+
+
+
 $gfedf_studentdata = new studentData();
-function gfedf_get_student_data()
+
+function gfedf_after_auth_action()
 {
   debug_log("(wp) Getting student data...");
 
-  global $gfedf_studentdata;
+  global $gfedf_studentdata,$reqiureAOb;
   if(requireAuthentication::isAuthenticated())
   {
       $username = requireAuthentication::getCurrentUser();
-      debug_log("Current user is '$username'");
+      //error_log("Current user is '$username'");
+      /*
+       *  Limited access for employess or student based on shortcode attribute value.
+       */
+      if(defined('gf_external_data_fields_config::RESTRICT_ATTRIBUTE'))
+      {
+          $matchedEl = $reqiureAOb->shortcodeAttributeValues(gf_external_data_fields_config::RESTRICT_ATTRIBUTE);
+          if( isset($matchedEl))
+          {
+              $matchedVal = strtolower($matchedEl);
+              if(isset($matchedVal) && !empty($matchedVal))
+              {
+                  switch($matchedVal)
+                  {
+                      case "employees":
+                            //Check if the user is an employee or not
+                          $empOb = new employeeData($username);
+                          $isEmp = $empOb->employeeRecord();
+                          if(!$isEmp)
+                          {
+                             // echo "You don't have permission to access this form.";
+                              $redirect_url = $reqiureAOb->shortcodeAttributeValues(gf_external_data_fields_config::RESTRICT_FAIL_REDIRECT_ATTRIBUTE);
+                              if(isset($redirect_url) && !empty($redirect_url))
+                              {
+                                $sanitize_url = esc_url($redirect_url);
+                                  Header('Location:'.$sanitize_url);
+                                  //exit();
+                              }
+                              else
+                              {
+
+                                  //should go to a default url
+                                  $default_url = gf_external_data_fields_config::DEFAULT_REDIRECT_URL;
+                                  if(isset($default_url) && !empty($default_url))
+                                  {
+                                      $sanitize_url = esc_url($default_url);
+                                      Header('Location:'.$sanitize_url);
+                                  }
+                              }
+                              echo "You don't have permission to view the form.";
+                              exit();
+
+                          }
+                          break;
+
+                  }
+              }
+
+          }
+      }
       $gfedf_studentdata = new studentData($username);
-      debug_log("StudentData:\n".print_r($gfedf_studentdata, true));
+      //debug_log("StudentData:\n".print_r($gfedf_studentdata, true));
+
+
+
+
   }
 }
 // This action needs to run AFTER the user has been identified by the requireAuthentication class
-add_action("wp", "gfedf_get_student_data", 20);
+add_action("wp", "gfedf_after_auth_action", 20);
 
 #########################
 // Pre-populate Fields

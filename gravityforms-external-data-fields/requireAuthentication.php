@@ -31,6 +31,7 @@ class requireAuthentication
     protected  $cas_path;
 
   public $enableDebug = false;
+  public $shortcodeAttributes = "";
 
   /**
    * @param      $post_shortcode
@@ -156,24 +157,25 @@ class requireAuthentication
           /*
            * Checks if the url to access the form is https or not.
            */
+
           $using_ssl = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' || $_SERVER['SERVER_PORT'] == 443;
           if(!$using_ssl)
-                header('Location: https://' . $_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI']);
+                header('Location: https://' . $_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI']."?");
+
           /*
-           * Checks for shortcode
+           * Checks for shortcode and authenticate attribute
            */
           if(!empty($matches))
           {
               $attributes = $matches[3];
 
+              $this->shortcodeAttributes = $attributes[0];
+
               if(defined('gf_external_data_fields_config::AUTHENTICATE_ATTRIBUTE') && !empty($attributes[0]))
               {
                   $auth_attr = gf_external_data_fields_config::AUTHENTICATE_ATTRIBUTE;
-                  $regex = "/$auth_attr\s*=\s*\"\s*(\S*)\s*\"/i";
-
-                  $hasAuthParam = preg_match($regex, $attributes[0], $matches);
-
-                  if( isset($matches[1])  &&  strtolower($matches[1]) == 'true')
+                  $matches = $this->shortcodeAttributeValues($auth_attr);
+                  if( isset($matches)  &&  strtolower($matches) == 'true')
                   {
                       //Force authentication
                       debug_log("Force Authentication is true");
@@ -181,7 +183,7 @@ class requireAuthentication
                   }
                   else
                   {
-                      unset($_SESSION[requireAuthentication::SESSION_USERNAME]);
+                      unset($_SESSION[requireAuthentication::SESSION_USERNAME]); // unsetting the session variable so that the form is not pre-filled since they are not authenticated.
                   }
 
               }
@@ -191,6 +193,24 @@ class requireAuthentication
     // no shortcode was found
     return false;
   }
+
+    public function shortcodeAttributeValues($attributeV)
+    {
+        $form_attributes =  $this->shortcodeAttributes;
+        if(!isset($attributeV) || empty($attributeV))
+            return null;
+        else
+        {
+            $regex = "/$attributeV\s*=\s*\"\s*(\S*)\s*\"/i";
+
+            $hasAuthParam = preg_match($regex, $form_attributes, $matches);
+            if(isset($matches[1]))
+                return $matches[1];
+            else
+                return null;
+        }
+    }
+
 
   /**
    *
@@ -313,5 +333,7 @@ class requireAuthentication
   {
     error_log("gfedf: ".$message." [" . $ex->getCode() . "] " . $ex->getMessage() . "\n" . $ex->getTraceAsString());
   }
+
+
 
 }
