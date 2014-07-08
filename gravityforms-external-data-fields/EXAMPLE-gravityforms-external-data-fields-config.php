@@ -16,10 +16,18 @@ class gf_external_data_fields_config
     const AFTER_LOGOUT_URL = "http://example.com/home/"; // This is the redirect used by CAS after user is signed out
 
  const AUTHENTICATE_ATTRIBUTE = "authenticate"; // This parameter should match the attribute name in the shortcode of gravity form. This is case sensitive
+
+ const RESTRICT_ATTRIBUTE = "allow";
+    const RESTRICT_FAIL_REDIRECT_ATTRIBUTE = "failure_redirect_url";
+    const DEFAULT_REDIRECT_URL = "facebook.com";
+
   // See http://docs.php.net/manual/en/ref.pdo-dblib.connection.php
   public static $dsn = "";
   // Database credentials
   // NOTE: Only SQL accounts if connecting to MSSQL (AD accounts do not work)
+public static $employeeQuery =  <<<EOS
+SELECT statement
+EOS;
   public $studentDataLogin = "";
   public $studentDataPassword = "";
 
