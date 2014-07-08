@@ -29,7 +29,7 @@ class employeeData
                 if($query)
                 {
                     $rs = $query->fetch(PDO::FETCH_ASSOC);
-                    
+
                     if($rs)
                     {
                        //means the user is an employee
