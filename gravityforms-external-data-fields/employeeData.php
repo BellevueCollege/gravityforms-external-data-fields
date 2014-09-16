@@ -4,14 +4,23 @@ require_once("gravityforms-external-data-fields-utilities.php");
 
 class employeeData
 {
-    function __construct($username)
+    private $employeeSSN = "";
+    private $employeeSID = "";
+    private $firstName = "";
+    private $lastName = "";
+    private $emailAddress = "";
+    private $phone = "";
+    private $username = "";
+
+    function __construct($login)
     {
-        $this->username = $username;
+        $this->username = $login;
     }
 
     public function employeeRecord()
     {
         debug_log("Connecting to '".gf_external_data_fields_config::$dsn."'...");
+
         try
          {
 
@@ -24,6 +33,7 @@ class employeeData
                 $query = $dbh->prepare(gf_external_data_fields_config::$employeeQuery);
 
                 debug_log("Executing SQL query for username '$this->username'...'\n".gf_external_data_fields_config::$employeeQuery);
+
                 $query->execute(array($this->username));
 
                 if($query)
@@ -33,7 +43,12 @@ class employeeData
                     if($rs)
                     {
                        //means the user is an employee
-                        $employeeSSN =  $rs[gf_external_data_fields_config::$sqlColumnEmployeeSSN];
+                        $this->employeeSSN =  $rs[gf_external_data_fields_config::$sqlColumnEmployeeSSN];
+                        $this->employeeSID = $rs[gf_external_data_fields_config::$sqlColumnEmployeeSID];
+                        $this->firstName = $rs[gf_external_data_fields_config::$sqlColumnEmployeeFirstName];
+                        $this->lastName = $rs[gf_external_data_fields_config::$sqlColumnEmployeeLastName];
+                        $this->emailAddress = $rs[gf_external_data_fields_config::$sqlColumnEmployeeEmailAddress];
+                        $this->phone = $rs[gf_external_data_fields_config::$sqlColumnEmployeeDaytimePhone];
 
                         return true;
                     }
@@ -54,6 +69,34 @@ class employeeData
         // close database connection
         $dbh = null;
         return false;
+    }
+    public function getFirstName()
+    {
+        return $this->firstName;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLastName()
+    {
+        return $this->lastName;
+    }
+    public function getEmailAddress()
+    {
+        return $this->emailAddress;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDaytimePhone()
+    {
+        return $this->phone;
+    }
+    public function getEmployeeID()
+    {
+        return $this->employeeSID;
     }
 }
 ?>
