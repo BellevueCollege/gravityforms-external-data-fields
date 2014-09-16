@@ -28,7 +28,7 @@ class gf_external_data_fields_config
 public static $employeeQuery =  <<<EOS
 SELECT statement
 EOS;
- 
+
     public static $sqlColumnEmployeeSSN = "SSN";
     public static $sqlColumnEmployeeSID = "SID";
     public static $sqlColumnEmployeeFirstName = "FirstName";
