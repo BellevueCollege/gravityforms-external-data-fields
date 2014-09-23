@@ -4,7 +4,7 @@ Plugin Name: Gravity Forms External Data Fields
 Plugin URI: https://github.com/BellevueCollege/gravityforms-external-data-fields
 Description: Extend Gravity Forms with Bellevue College form field data
 Author: Bellevue College Technology Development and Communications
-Version: 1.2
+Version: 1.3
 Author URI: http://www.bellevuecollege.edu
 */
 
@@ -52,16 +52,19 @@ add_action( 'wp_enqueue_scripts', 'gfedf_disable_input_fields' );
 
 
 $gfedf_studentdata = new studentData();
+$empOb = null; // declaring this globally so that we can access this object while populating the form fields.
 
 function gfedf_after_auth_action()
 {
   debug_log("(wp) Getting student data...");
 
-  global $gfedf_studentdata,$reqiureAOb;
+  global $gfedf_studentdata,$reqiureAOb, $empOb;
   if(requireAuthentication::isAuthenticated())
   {
       $username = requireAuthentication::getCurrentUser();
-      //error_log("Current user is '$username'");
+      $empOb = new employeeData($username);
+      $isEmp = $empOb->employeeRecord();
+
       /*
        *  Limited access for employess or student based on shortcode attribute value.
        */
@@ -77,8 +80,10 @@ function gfedf_after_auth_action()
                   {
                       case "employees":
                             //Check if the user is an employee or not
-                          $empOb = new employeeData($username);
-                          $isEmp = $empOb->employeeRecord();
+
+
+
+
                           if(!$isEmp)
                           {
                              // echo "You don't have permission to access this form.";
@@ -111,11 +116,9 @@ function gfedf_after_auth_action()
 
           }
       }
+
       $gfedf_studentdata = new studentData($username);
       //debug_log("StudentData:\n".print_r($gfedf_studentdata, true));
-
-
-
 
   }
 }
@@ -127,15 +130,25 @@ add_action("wp", "gfedf_after_auth_action", 20);
 #########################
 	// To use: add the string after gform_field_value_
 	// Ex. bc_sid or bc_first_name
-	// Add desired string to "Allow field to be populated automattically" field in advanced tab of the Gravity Forms Form Editor
+	// Add desired string to "Allow field to be populated automatically" field in advanced tab of the Gravity Forms Form Editor
 
 	// SID
 	add_filter('gform_field_value_bc_sid', 'populate_bc_sid');
 	function populate_bc_sid($value){
     debug_log("(= gform_field_value_bc_sid =) Setting SID...");
 
-    global $gfedf_studentdata;
-    $bc_sid = $gfedf_studentdata->getStudentID();
+    global $gfedf_studentdata,$empOb;
+
+    if($gfedf_studentdata->isAStudent())
+        $bc_sid = $gfedf_studentdata->getStudentID();
+    else
+    {
+        //error_log("emp ob :".print_r($empOb,true));
+        if($empOb!=null)
+            $bc_sid = $empOb->getEmployeeID();
+    }
+
+
     debug_log("...'$bc_sid'");
 		return $bc_sid;
 	}
@@ -145,19 +158,31 @@ add_action("wp", "gfedf_after_auth_action", 20);
 	function populate_bc_first_name($value){
     debug_log("(= gform_field_value_bc_first_name =) Setting first name...");
 
-    global $gfedf_studentdata;
+    global $gfedf_studentdata,$empOb;
+    if($gfedf_studentdata->isAStudent())
 		$bc_first_name = $gfedf_studentdata->getFirstName();
+    else
+    {
+        if($empOb!=null)
+            $bc_first_name = $empOb->getFirstName();
+    }
     debug_log("...'$bc_first_name'");
 		return $bc_first_name;
 	}
 
-	// First Name
+	// Last Name
 	add_filter('gform_field_value_bc_last_name', 'populate_bc_last_name');
 	function populate_bc_last_name($value){
     debug_log("(= gform_field_value_bc_last_name =) Setting last name...");
 
-    global $gfedf_studentdata;
+    global $gfedf_studentdata,$empOb;
+    if($gfedf_studentdata->isAStudent())
 		$bc_last_name = $gfedf_studentdata->getLastName();
+    else
+    {
+        if($empOb!=null)
+            $bc_last_name = $empOb->getLastName();
+    }
     debug_log("...'$bc_last_name'");
 		return $bc_last_name;
 	}
@@ -167,8 +192,14 @@ add_action("wp", "gfedf_after_auth_action", 20);
 	function populate_bc_email($value){
     debug_log("(= gform_field_value_bc_email =) Setting e-mail...");
 
-    global $gfedf_studentdata;
+    global $gfedf_studentdata,$empOb;
+    if($gfedf_studentdata->isAStudent())
 		$bc_email = $gfedf_studentdata->getEmailAddress();
+    else
+    {
+        if($empOb!=null)
+            $bc_email = $empOb->getEmailAddress();
+    }
     debug_log("...'$bc_email'");
 		return $bc_email;
 	}
@@ -178,8 +209,14 @@ add_action("wp", "gfedf_after_auth_action", 20);
 	function populate_bc_dayphone($value){
     debug_log("(= gform_field_value_bc_dayphone =) Setting daytime phone...");
 
-    global $gfedf_studentdata;
+    global $gfedf_studentdata,$empOb;
+    if($gfedf_studentdata->isAStudent())
 		$bc_dayphone = $gfedf_studentdata->getDaytimePhone();
+    else
+    {
+        if($empOb!=null)
+            $bc_dayphone = $empOb->getDaytimePhone();
+    }
     debug_log("...'$bc_dayphone'");
 		return $bc_dayphone;
 	}
@@ -190,10 +227,11 @@ add_action("wp", "gfedf_after_auth_action", 20);
     debug_log("(= gform_field_value_bc_evephone =) Setting evening phone...");
 
     global $gfedf_studentdata;
-		$bc_evephone = $gfedf_studentdata->getEveningPhone();
-    debug_log("...'$bc_evephone'");
-		return $bc_evephone;
+        $bc_evephone = $gfedf_studentdata->getEveningPhone();
+        debug_log("...'$bc_evephone'");
+        return $bc_evephone;
 	}
+
 
 
 // This function edits the notification message if the authentication field is not present in the form.
