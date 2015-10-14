@@ -4,7 +4,7 @@ Plugin Name: Gravity Forms External Data Fields
 Plugin URI: https://github.com/BellevueCollege/gravityforms-external-data-fields
 Description: Extend Gravity Forms with Bellevue College form field data
 Author: Bellevue College Technology Development and Communications
-Version: 1.3
+Version: 1.3.0.1
 Author URI: http://www.bellevuecollege.edu
 */
 
