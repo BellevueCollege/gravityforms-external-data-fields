@@ -33,13 +33,6 @@ function change_upload_path ( $path_info, $form_id ) {
     return $path_info;
 }
 
-// Stylesheet - loaded the WordPress way
-function gfedf_load_stylesheets () {
-    wp_enqueue_script ( "gravityforms-external-data-fields-style", plugins_url ( "/css/style.css", __FILE__ ) );
-}
-
-add_action ( 'wp_enqueue_scripts', 'gfedf_load_stylesheets' );
-
 // Make Gravity Forms fields Read-only
 function gfedf_disable_input_fields () {
     wp_register_script ( 'gravityforms-disable-fields', plugins_url ( '/js/gravityforms-disable-fields.js', __FILE__ ), array( 'jquery' ), '', true );
