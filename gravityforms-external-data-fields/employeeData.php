@@ -1,81 +1,75 @@
 <?php
-	require_once ( "gravityforms-external-data-fields-config.php" );
-	require_once ( "gravityforms-external-data-fields-utilities.php" );
+require_once( "dataApi.php" );
+require_once( "gravityforms-external-data-fields-config.php" );
+require_once( "gravityforms-external-data-fields-utilities.php" );
 
-	class employeeData {
-		private $employeeSSN   = "";
-		private $employeeSID   = "";
-		private $firstName     = "";
-		private $lastName      = "";
-		private $emailAddress  = "";
-		private $phone         = "";
-		private $username      = "";
+class EmployeeData {
+	//private $employeeSSN   = "";
+	private $sid = "";
+	private $first_name = "";
+	private $last_name = "";
+	private $alias_name = "";
+	private $email = "";
+	private $phone = "";
+	private $username = "";
 
-		function __construct ( $login ) {
-			$this->username = $login;
-		}
-
-		public function employeeRecord () {
-			debug_log ( "Connecting to '" . gf_external_data_fields_config::$dsn . "'..." );
-
-			try {
-				if ( $this->username ) {
-					$dbh = new PDO( gf_external_data_fields_config::$dsn, gf_external_data_fields_config::$studentDataLogin, gf_external_data_fields_config::$studentDataPassword );
-
-					$query = $dbh->prepare ( gf_external_data_fields_config::$employeeQuery );
-
-					debug_log ( "Executing SQL query for username '$this->username'...'\n" . gf_external_data_fields_config::$employeeQuery );
-
-					$query->execute ( array( $this->username ) );
-
-					if ( $query ) {
-						$rs = $query->fetch ( PDO::FETCH_ASSOC );
-
-						if ( $rs ) {
-							//means the user is an employee
-							$this->employeeSSN = $rs[ gf_external_data_fields_config::$sqlColumnEmployeeSSN ];
-							$this->employeeSID = $rs[ gf_external_data_fields_config::$sqlColumnEmployeeSID ];
-							$this->firstName = $rs[ gf_external_data_fields_config::$sqlColumnEmployeeFirstName ];
-							$this->lastName = $rs[ gf_external_data_fields_config::$sqlColumnEmployeeLastName ];
-							$this->emailAddress = $rs[ gf_external_data_fields_config::$sqlColumnEmployeeEmailAddress ];
-							$this->phone = $rs[ gf_external_data_fields_config::$sqlColumnEmployeeDaytimePhone ];
-
-							return true;
-						}
-					}
-				}
-				return false;
-
-			} catch ( PDOException $ex ) {
-				//$err = error_get_last();
-				debug_log ( "An exception occurred while retrieving employee data! See error log." );
-				//$this->logError("Failed to retrieve student data: ". $ex->getCode() .": '".$ex->getMessage()."' Trace: ".$ex->getTraceAsString());
-				//$this->logError("Connection: ". (($dbh != null) ? $dbh->errorInfo() : "null"));
-				// $this->logError("Last PHP error: ". $err);
-			}
-
-			// close database connection
-			$dbh = null;
-			return false;
-		}
-
-		public function getFirstName () {
-			return $this->firstName;
-		}
-
-		public function getLastName () {
-			return $this->lastName;
-		}
-
-		public function getEmailAddress () {
-			return $this->emailAddress;
-		}
-
-		public function getDaytimePhone () {
-			return $this->phone;
-		}
-
-		public function getEmployeeID () {
-			return $this->employeeSID;
-		}
+	function __construct ( $login ) {
+		$this->username = $login;
 	}
+
+	public function employee_record() {
+		
+        //$this->username = $this->extract_username( $login );
+		//$this->username = $login;
+        $this->has_student_record = false;
+
+        // retrieve employee info
+        try {
+			if ( isset( $this->username ) ) {
+				debug_log( "GF External Data Fields plugin :: Query Data API for user '" . $this->username . "'..." );
+
+				$emp_info = DataApi::get_employee($this->username);
+				//echo $emp_info;
+				if ( isset($emp_info) ) {
+
+					$this->sid = $emp_info['SID'];
+					$this->first_name = $emp_info['firstName'];
+					$this->last_name = $emp_info['lastName'];
+					$this->alias_name = $emp_info['aliasName'];
+					$this->email = $emp_info['email'];
+					$this->phone = $emp_info['phone'];
+
+					debug_log( "GF External Data Fields plugin :: Successfully retrieved employee info: $this->sid, $this->first_name $this->last_name, $this->email" );
+
+					return true;
+				}
+				else {
+					debug_log( sprintf("Username %s does not have an employee record.", $this->username) );
+				}
+			}
+        } catch ( Exception $ex ) {
+            error_log( "GF External Data Fields plugin :: Failed to retrieve employee data: " . $ex->getMessage() );
+        }
+		return false;
+	}
+
+	public function get_first_name() {
+		return $this->first_name;
+	}
+
+	public function get_last_name() {
+		return $this->last_name;
+	}
+
+	public function get_email() {
+		return $this->email;
+	}
+
+	public function get_phone() {
+		return $this->phone;
+	}
+
+	public function get_sid() {
+		return $this->sid;
+	}
+}
