@@ -19,9 +19,9 @@ require_once( "classes/employeeData.php" );
 
 class GFEDF {
     
-    protected $studentdata; // = new StudentData();
-    protected $empdata; // = null; // declaring this globally so that we can access this object while populating the form fields.
-    protected $shortcode; //= null; 
+    protected $studentdata; 
+    protected $empdata;
+    protected $shortcode;
 
     function __construct() {
         $this->studentdata = new StudentData();
@@ -224,7 +224,7 @@ class GFEDF {
             $username = $current_user->user_login;
             //$username = "nicole.swan";
             $this->empdata = new EmployeeData( $username );
-            $isEmp = $this->empdata->employee_record();
+            $isEmp = $this->empdata->is_employee();
             //echo "Is employee?: "; var_dump($isEmp);
             //var_dump($this->empdata);
             /*

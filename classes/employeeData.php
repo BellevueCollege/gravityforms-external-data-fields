@@ -5,32 +5,32 @@ require_once( "utilities.php" );
 
 class EmployeeData {
 	//private $employeeSSN   = "";
-	private $sid = "";
-	private $first_name = "";
-	private $last_name = "";
-	private $alias_name = "";
-	private $email = "";
-	private $phone = "";
-	private $username = "";
+	private $sid;
+	private $first_name;
+	private $last_name;
+	private $alias_name;
+	private $email;
+	private $phone;
+	private $username;
+	private $has_student_record;
 
-	function __construct ( $login ) {
+	function __construct( $login ) {
 		$this->username = $login;
-	}
+		$this->has_student_record = false;
+		$this->sid = null;
+		$this->first_name = null;
+		$this->last_name = null;
+		$this->alias_name = null;
+		$this->email = null;
+		$this->phone = null;
 
-	public function employee_record() {
-		
-        //$this->username = $this->extract_username( $login );
-		//$this->username = $login;
-        $this->has_student_record = false;
-
-        // retrieve employee info
-        try {
+		try {
 			if ( isset( $this->username ) ) {
 				debug_log( "GF External Data Fields plugin :: Query Data API for user '" . $this->username . "'..." );
 
-				$emp_info = DataApi::get_employee($this->username);
+				$emp_info = DataApi::get_employee( $this->username );
 				//echo $emp_info;
-				if ( isset($emp_info) ) {
+				if ( isset( $emp_info ) ) {
 
 					$this->sid = $emp_info['SID'];
 					$this->first_name = $emp_info['firstName'];
@@ -40,25 +40,36 @@ class EmployeeData {
 					$this->phone = $emp_info['phone'];
 
 					debug_log( "GF External Data Fields plugin :: Successfully retrieved employee info: $this->sid, $this->first_name $this->last_name, $this->email" );
-
-					return true;
 				}
 				else {
-					debug_log( sprintf("Username %s does not have an employee record.", $this->username) );
+					debug_log( sprintf( "Username %s does not have an employee record.", $this->username ) );
 				}
 			}
         } catch ( Exception $ex ) {
             error_log( "GF External Data Fields plugin :: Failed to retrieve employee data: " . $ex->getMessage() );
         }
-		return false;
 	}
 
+	// if SID is set, we determine that the username has an employee record
+	public function is_employee() {
+		if ( isset( $this->sid ) ) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	// get functions for class members
 	public function get_first_name() {
 		return $this->first_name;
 	}
 
 	public function get_last_name() {
 		return $this->last_name;
+	}
+
+	public function get_alias_name() {
+		return $this->alias_name;
 	}
 
 	public function get_email() {
