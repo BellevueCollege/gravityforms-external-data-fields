@@ -16,4 +16,4 @@ After installation, create a `config.php` file in the main directory using the s
 
 ### Updates
 
-May 2017 - The plugin was updated to change from getting data directory from ODS/connection to MSSQL to using the new BC DataAPI. The plugin was massively refactored with this update.
+May 2017 - The plugin was updated to change from getting data directly from ODS/connection to MSSQL to using the new BC DataAPI. The plugin was massively refactored with this update.
