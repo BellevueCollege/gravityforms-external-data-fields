@@ -1,7 +1,7 @@
 <?php 
 /* Data API class for authentication and accessing endpoints */
 
-require_once( "gravityforms-external-data-fields-config.php" );
+require_once( dirname( plugin_dir_path( __FILE__ ) ) . "/config.php" );
 
 class DataApi {
 

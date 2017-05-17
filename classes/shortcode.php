@@ -1,6 +1,6 @@
 <?php
-require_once( "gravityforms-external-data-fields-config.php" );
-require_once( "gravityforms-external-data-fields-utilities.php" );
+require_once( dirname( plugin_dir_path( __FILE__ ) ) . "/config.php" );
+require_once( "utilities.php" );
 
 /**
     * This class provides a simple wrapper for the standard gravity forms 

@@ -2,8 +2,8 @@
 /**
 **/
 require_once("dataApi.php");
-require_once("gravityforms-external-data-fields-config.php");
-require_once("gravityforms-external-data-fields-utilities.php");
+require_once( dirname( plugin_dir_path( __FILE__ ) ) . "/config.php" );
+require_once("utilities.php");
 
 class StudentData {
     const UNSPECIFIED_DOMAIN = "UNSPECIFIED";

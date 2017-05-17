@@ -11,10 +11,10 @@ GitHub Plugin URI: bellevuecollege/gravityforms-external-data-fields
 
 defined ( 'ABSPATH' ) OR exit;
 
-require_once( "gravityforms-external-data-fields-config.php" );
-require_once("gravityforms-external-data-fields-shortcode.php");
-require_once( "studentData.php" );
-require_once( "employeeData.php" );
+require_once( "config.php" );
+require_once( "classes/shortcode.php" );
+require_once( "classes/studentData.php" );
+require_once( "classes/employeeData.php" );
 //error_reporting ( E_ALL ^ E_NOTICE ); // Report all errors except E_NOTICE
 
 class GFEDF {
@@ -29,8 +29,6 @@ class GFEDF {
         $this->shortcode = new GFEDF_Shortcode();
 
         //add action and filters needed
-        //add_filter( 'gform_upload_path', array( $this, 'change_upload_path' ), 10, 2 );
-        //add_action( 'wp_enqueue_scripts', array( $this, 'disable_input_fields' ) );
         add_filter( 'gform_notification', array( $this, 'edit_notification_message' ), 10, 3 );
         add_filter( 'gform_pre_render', array( $this, 'pre_populate_fields' ), 7, 1 );
 
