@@ -1,51 +1,19 @@
-gravityforms-external-data-fields
+Gravity Forms External Data Fields Plugin
 =================================
 
-Gravity Forms enhancements for Bellevue College
-
-## Project setup
+This plugin connects to our DataAPI to provide student or employee information to prefill GF forms.
 
 This plugin was developed with the following:
 
-+   PHP 5.3
-+   WordPress 3.8
++   PHP 5.5
++   WordPress 4.75
 +   Gravity Forms
-+   MS SQL Server 2008 R2
++   BC Data API
 
-### SQL Server drivers on Windows
+### Configuration
 
-The following instructions were taken from [Accessing SQL Server Databases from
-PHP](http://social.technet.microsoft.com/wiki/contents/articles/1258.accessing-sql-server-databases-from-php.aspx)
-and assume PHP ver 5.3, non-thread-safe. For more detailed information, please see the full article.
+After installation, create a `config.php` file in the main directory using the sample config file (`config-sample.php`) as an example.
 
-1.  Download the [SQLSRV](http://msdn.microsoft.com/en-us/sqlserver/ff657782.aspx) PHP Data Objects
-    driver from Microsoft, unpacking the files into a temporary folder.
-2.  Copy the following files into your PHP extensions folder (e.g. `C:\php\ext`)
-    +   php_pdo_sqlsrv_53_nts.dll
-    +   php_sqlsrv_53_nts.dll
-3.  Add the following lines to your `php.ini` file:
+### Updates
 
-```ini
-extension=php_sqlsrv_53_nts.dll
-extension=php_pdo_sqlsrv_53_nts.dll
-```
-
-### SQL Server drivers on Linux
-
-(TODO)
-
-### Plugin configuration
-
-#### Database settings for Windows
-
-```
-sqlsrv:Server=SERVER_NAME;Database=DB_NAME;
-```
-
-#### Database settings for Linux
-
-**NOTE:** The following setting has not yet been confirmed.
-
-```
-mssql:Server=SERVER_NAME;Database=DB_NAME;
-```
+May 2017 - The plugin was updated to change from getting data directory from ODS/connection to MSSQL to using the new BC DataAPI. The plugin was massively refactored with this update.
