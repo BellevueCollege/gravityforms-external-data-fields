@@ -11,7 +11,7 @@ class DataApi {
         $body = array('clientid' => GFEDF_Config::get_data_api_clientid(), 'clientkey' => GFEDF_Config::get_data_api_clientkey());
         $auth_url = GFEDF_Config::get_data_api_url() . GFEDF_Config::get_data_api_stub_auth();
         $resp = wp_remote_post($auth_url, array(
-                        'method' => 'POST', 'sslverify' => false,
+                        'method' => 'POST', 'sslverify' => GFEDF_Config::get_data_api_sslverify(),
                         'body' => $body));
 
         if ( is_wp_error( $resp ) ) {
@@ -55,7 +55,7 @@ class DataApi {
         $headers = self::create_authorization_header();
         try {
             //make url call
-            $resp = wp_remote_get( $_url, array( 'headers' => $headers, 'sslverify' => false ) );
+            $resp = wp_remote_get( $_url, array( 'headers' => $headers, 'sslverify' => GFEDF_Config::get_data_api_sslverify() ) );
 
             if ( is_wp_error( $resp ) ) {
 
@@ -108,7 +108,7 @@ class DataApi {
     public static function create_authorization_header(){
         $token = self::get_token();
 
-        $headers = array('Authorization' => 'Bearer ' . $token);
+        $headers = array('Authorization' => 'Bearer ' . $token );
 
         return $headers;
     }

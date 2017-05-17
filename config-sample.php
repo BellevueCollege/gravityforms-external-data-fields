@@ -22,6 +22,7 @@ class GFEDF_Config
     protected static $data_api_clientid = "";   //client ID for DataAPI auth
     protected static $data_api_clientkey = "";  //client key for DataAPI auth
     protected static $data_api_token_option_name = "gfedf_dataapi_token";   //name to use for WP option to use to save token
+    protected static $data_api_sslverify = false;   //specify whether ssl is verified in call to DataAPI, should prob be true for production environment
 
     //get functions for config items
     public static function get_is_auth() {
@@ -74,5 +75,9 @@ class GFEDF_Config
 
     public static function get_data_api_token_option_name(){
         return self::$data_api_token_option_name;
+    }
+
+    public static function get_data_api_sslverify(){
+        return self::$data_api_sslverify;
     }
 }
