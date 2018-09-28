@@ -6,10 +6,6 @@
 class GFEDF_Config
 {
     // user authentication and restriction config
-    protected static $is_auth = "is_auth";  // Set this value to name of the authenticated text field of the form. Field is case sensitive.
-    protected static $message_verified = "VERIFIED SUBMISSION - This individual has confirmed their identity by logging in with their NetID."; //Message that indicates user is authenticated
-    protected static $message_notverified = "NOT VERIFIED"; // Message that indicates user is not authenticated
-
     protected static $restrict_attr = "allow";  // user restriction attribute used in gf shortcode
     protected static $restrict_fail_redirect_attr = "failure_redirect_url"; // gf shortcode attribute for redirect url if fails restriction
     protected static $default_redirect_url = "";   // a default redirect url in case other is not provided in shortcode
@@ -25,22 +21,6 @@ class GFEDF_Config
     protected static $data_api_sslverify = false;   //specify whether ssl is verified in call to DataAPI, should prob be true for production environment
 
     //get functions for config items
-    public static function get_is_auth() {
-        return self::$is_auth;
-    }
-
-    public static function get_message_verified() {
-        return self::$message_verified;
-    }
-
-    public static function get_message_notverified() {
-        return self::$message_notverified;
-    }
-
-    public static function get_restrict_attr() {
-        return self::$restrict_attr;
-    }
-
     public static function get_restrict_fail_redirect_attr() {
         return self::$restrict_fail_redirect_attr;
     }

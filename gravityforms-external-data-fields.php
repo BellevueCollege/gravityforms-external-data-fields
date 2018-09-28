@@ -28,10 +28,6 @@ class GFEDF {
         $this->empdata = null;
         $this->shortcode = new GFEDF_Shortcode();
 
-        //add action and filters needed
-        add_filter( 'gform_notification', array( $this, 'edit_notification_message' ), 10, 3 );
-        add_filter( 'gform_pre_render', array( $this, 'pre_populate_fields' ), 7, 1 );
-
         // This action needs to run AFTER the user has been authenticated
         add_action ( 'wp', array( $this, 'after_auth_action' ), 10 );
 
@@ -45,43 +41,6 @@ class GFEDF {
 
         //shortcode filters
         add_shortcode( 'gfedf_redirect_to_login', array( $this, 'gfedf_login_redirect' ) );
-    }
-
-    // This function checks if the auth field exists. It will update the default value for the auth field if the parameter $if_exists is not true
-    // This function serves the output for pre-rendering the form and also just checking if the auth field exists in the form
-    function auth_field( &$form, $if_exists = null ) {
-        $auth_field = GFEDF_Config::get_is_auth();
-        if ( isset( $auth_field ) ) {
-            foreach ( $form[ 'fields' ] as &$field ) {
-                if ( $field[ 'inputName' ] == $auth_field ) {
-                    if ( !$if_exists )
-                        $field[ "defaultValue" ] = $this->populate_auth_field();
-                    return $form;
-                }
-            }
-        }
-        return false;
-    }
-
-    // This function edits the notification message if the authentication field is not present in the form.
-    function edit_notification_message( $notification, $form, $entry ) {
-        //$is_auth = $this->auth_field( $form, true );
-        $is_auth = false;
-        if ( empty( $is_auth ) )// means auth field is not present in the form, so lets add authentication information in the email
-        {
-            $is_verified_text = $this->populate_auth_field();
-            $notification[ 'message' ] = $is_verified_text . $notification[ 'message' ];
-        }
-        return $notification;
-
-    }
-
-    // This function adds text to the auth field based on whether the user is logged in or not.
-    function pre_populate_fields( $form ) {
-        $updated_form = $this->auth_field( $form );
-        if ( $updated_form )
-            return $updated_form;
-        return $form;
     }
 
     // Add shortcode for redirect to login
@@ -175,7 +134,7 @@ class GFEDF {
             $bc_dayphone = $this->studentdata->get_daytime_phone();
         else {
             if ( $this->empdata != null )
-                $bc_dayphone = $this->empdata->get_daytime_phone();
+                $bc_dayphone = $this->empdata->get_phone();
         }
 
         debug_log( "...'$bc_dayphone'" );
@@ -189,21 +148,7 @@ class GFEDF {
         $bc_evephone = $this->studentdata->get_evening_phone();
 
         debug_log( "...'$bc_evephone'" );
-
         return $bc_evephone;
-    }
-
-    // Populates auth field with verification/non-verification message
-    function populate_auth_field() {
-
-        $v_message = GFEDF_Config::get_message_verified();
-        $uv_message = GFEDF_Config::get_message_notverified();
-        $text = isset( $uv_message ) ? $uv_message : "Not Authenticated";
-
-        if ( is_user_logged_in() )
-            $text = isset( $v_message ) ? $v_message : "Authenticated";
-
-        return $text;
     }
 
     /*******
