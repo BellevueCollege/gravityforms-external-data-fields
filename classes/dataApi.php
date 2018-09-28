@@ -22,9 +22,9 @@ class DataApi {
             //var_dump($resp['body']);
             $json = json_decode($resp['body'], true);
             //var_dump($json);
-            if ( !empty($json['token'])) {
+            if ( !empty($json['access_token'])) {
                 //get token from response and save
-                $token = $json['token'];
+                $token = $json['access_token'];
                 update_option(GFEDF_Config::get_data_api_token_option_name(), $token);
                 return $token;
             } else {
@@ -62,15 +62,18 @@ class DataApi {
                 //if error, log it
                 $error_message = $resp->get_error_message();
                 error_log( print_r( "GF External Data Fields plugin :: error authenticating to Data API - " . $error_message, true ) );
+                debug_log( print_r( "GF External Data Fields plugin :: error authenticating to Data API - " . $error_message, true ) );
                 return null;
             } else {
 
                 //handle non-error response
                 $json = $resp;
+                $response_code = $json["response"]["code"];
 
-                if ( isset( $json ) && $json['body'] == 'Unauthorized.' ) {
+                if ( isset( $json ) && $response_code == 401 ) {
 
                     // token is likely expired so reauthenticate and retry data call
+                    debug_log( print_r("GFEDF :: Authentication token is likely expired. Attempting to reauthenticate.", true) );
                     self::authenticate();
                     return self::get_url( $_url );
                 
@@ -90,6 +93,7 @@ class DataApi {
             }
         } catch ( Exception $e ){
             error_log( print_r("GF External Data Fields plugin :: error building and saving model - " . $e->getMessage(), true) );
+            debug_log( print_r("GF External Data Fields plugin :: error building and saving model - " . $e->getMessage(), true) );
             return null;
         }
     }
