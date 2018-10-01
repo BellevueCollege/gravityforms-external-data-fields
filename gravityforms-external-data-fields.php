@@ -4,7 +4,7 @@ Plugin Name: Gravity Forms External Data Fields
 Plugin URI: https://github.com/BellevueCollege/gravityforms-external-data-fields
 Description: Extend Gravity Forms with Bellevue College data api data
 Author: Bellevue College Integration Team
-Version: 1.3.0.2
+Version: 2.0
 Author URI: http://www.bellevuecollege.edu
 GitHub Plugin URI: bellevuecollege/gravityforms-external-data-fields
 */
@@ -29,7 +29,10 @@ class GFEDF {
         $this->shortcode = new GFEDF_Shortcode();
 
         // This action needs to run AFTER the user has been authenticated
-        add_action ( 'wp', array( $this, 'after_auth_action' ), 10 );
+        //don't run this if user is on admin/backend page
+        if ( !is_admin() ) {
+            add_action ( 'wp', array( $this, 'after_auth_action' ), 10 );
+        }
 
         //autofill function filters
         add_filter( 'gform_field_value_bc_sid', array( $this, 'populate_bc_sid' ) );
@@ -162,60 +165,64 @@ class GFEDF {
 
         global $post;
         $content = $post->post_content;
-        $this->shortcode->get_shortcode_from_content($content);
 
-        if ( is_user_logged_in() ) {
-            $current_user = wp_get_current_user();
-            $username = $current_user->user_login;
-            //$username = "nicole.swan";
-            $this->empdata = new EmployeeData( $username );
-            $isEmp = $this->empdata->is_employee();
-            //echo "Is employee?: "; var_dump($isEmp);
-            //var_dump($this->empdata);
-            /*
-            *  Limited access for employees or student based on shortcode attribute value.
-            */
-            $restrict_attr = GFEDF_Config::get_restrict_attr();
-            if ( isset( $restrict_attr )  && !empty($this->shortcode) ) {
-                //var_dump($this->shortcode);
-                $matchedEl = $this->shortcode->get_attribute_value( $restrict_attr );
-                //echo "matchedEL: " . $matchedEl;
-                if ( isset( $matchedEl ) ) {
-                    $matchedVal = strtolower( $matchedEl );
-                    if ( isset( $matchedVal ) && !empty( $matchedVal ) ) {
-                        switch ( $matchedVal ) {
-                            case "employees":
-                                //Check if the user is an employee or not
-                                //echo "in employees";
-                                if ( !$isEmp ) {
-                                    //echo "You don't have permission to access this form.";
-                                    $redirect_url = $this->shortcode->get_attribute_value( GFEDF_Config::get_restrict_fail_redirect_attr() );
-                                    if ( isset( $redirect_url ) && !empty( $redirect_url ) ) {
-                                        $sanitize_url = esc_url( $redirect_url );
-                                        Header( 'Location:' . $sanitize_url );
-                                        exit();
-                                    }
-                                    else {
-                                        //should go to a default url
-                                        $default_url = GFEDF_Config::get_default_redirect_url();
-                                        if ( isset( $default_url ) && !empty( $default_url ) ) {
-                                            $sanitize_url = esc_url( $default_url );
-                                            Header ( 'Location:' . $sanitize_url );
+        if ( ! empty( $content ) ) {
+
+            $this->shortcode->get_shortcode_from_content($content);
+
+            if ( is_user_logged_in() ) {
+                $current_user = wp_get_current_user();
+                $username = $current_user->user_login;
+                //$username = "nicole.swan";
+                $this->empdata = new EmployeeData( $username );
+                $isEmp = $this->empdata->is_employee();
+                //echo "Is employee?: "; var_dump($isEmp);
+                //var_dump($this->empdata);
+                /*
+                *  Limited access for employees or student based on shortcode attribute value.
+                */
+                $restrict_attr = GFEDF_Config::get_restrict_attr();
+                if ( isset( $restrict_attr )  && !empty($this->shortcode) ) {
+                    //var_dump($this->shortcode);
+                    $matchedEl = $this->shortcode->get_attribute_value( $restrict_attr );
+                    //echo "matchedEL: " . $matchedEl;
+                    if ( isset( $matchedEl ) ) {
+                        $matchedVal = strtolower( $matchedEl );
+                        if ( isset( $matchedVal ) && !empty( $matchedVal ) ) {
+                            switch ( $matchedVal ) {
+                                case "employees":
+                                    //Check if the user is an employee or not
+                                    //echo "in employees";
+                                    if ( !$isEmp ) {
+                                        //echo "You don't have permission to access this form.";
+                                        $redirect_url = $this->shortcode->get_attribute_value( GFEDF_Config::get_restrict_fail_redirect_attr() );
+                                        if ( isset( $redirect_url ) && !empty( $redirect_url ) ) {
+                                            $sanitize_url = esc_url( $redirect_url );
+                                            Header( 'Location:' . $sanitize_url );
+                                            exit();
                                         }
+                                        else {
+                                            //should go to a default url
+                                            $default_url = GFEDF_Config::get_default_redirect_url();
+                                            if ( isset( $default_url ) && !empty( $default_url ) ) {
+                                                $sanitize_url = esc_url( $default_url );
+                                                Header ( 'Location:' . $sanitize_url );
+                                            }
+                                        }
+                                        //echo "You don't have permission to view the form.";
+                                        exit();
+
                                     }
-                                    //echo "You don't have permission to view the form.";
-                                    exit();
+                                    break;
 
-                                }
-                                break;
-
+                            }
                         }
+
                     }
-
                 }
-            }
 
-            $this->studentdata = new StudentData( $username );
+                $this->studentdata = new StudentData( $username );
+            }
         }
     }
 }
