@@ -21,6 +21,10 @@ class GFEDF_Config
     protected static $data_api_sslverify = false;   //specify whether ssl is verified in call to DataAPI, should prob be true for production environment
 
     //get functions for config items
+    public static function get_restrict_attr() {
+        return self::$restrict_attr;
+    }
+    
     public static function get_restrict_fail_redirect_attr() {
         return self::$restrict_fail_redirect_attr;
     }
