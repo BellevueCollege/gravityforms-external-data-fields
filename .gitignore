@@ -1,4 +1,4 @@
-gravityforms-external-data-fields-config.php
+config.php
 
 # Default WordPress ignores provided by Github
 .htaccess
