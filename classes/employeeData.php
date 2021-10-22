@@ -32,7 +32,7 @@ class EmployeeData {
 				//echo $emp_info;
 				if ( isset( $emp_info ) ) {
 
-					$this->sid = $emp_info['SID'];
+					$this->sid = $emp_info['EMPLID'];
 					$this->first_name = $emp_info['firstName'];
 					$this->last_name = $emp_info['lastName'];
 					$this->alias_name = $emp_info['aliasName'];
