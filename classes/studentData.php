@@ -36,7 +36,7 @@ class StudentData {
             if ( isset($stu_info) ) {
                 $this->has_student_record = true;
 
-                $this->student_id = $stu_info['SID'];
+                $this->student_id = $stu_info['EMPLID'];
                 $this->first_name = $stu_info['firstName'];
                 $this->last_name = $stu_info['lastName'];
                 $this->email = $stu_info['email'];
