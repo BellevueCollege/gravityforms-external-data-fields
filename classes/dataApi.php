@@ -37,14 +37,14 @@ class DataApi {
     // Get student information from the student data DataAPI endpoint
     public static function get_student($_username) {
         $stu_url = GFEDF_Config::get_data_api_url() . GFEDF_Config::get_data_api_stub_stu();
-        $stu_url = sprintf($stu_url, $_username);
+        $stu_url = sprintf($stu_url, str_replace('@bellevuecollege.edu', '', $_username));
         return self::get_url($stu_url);
     }
 
     // Get employee information from the employee data DataAPI endpoint
     public static function get_employee( $_username ){
         $emp_url = GFEDF_Config::get_data_api_url() . GFEDF_Config::get_data_api_stub_emp();
-        $emp_url = sprintf( $emp_url, $_username );
+        $emp_url = sprintf( $emp_url, str_replace('@bellevuecollege.edu', '', $_username) );
         return self::get_url( $emp_url );
     }
 
