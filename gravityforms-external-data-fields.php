@@ -173,28 +173,37 @@ class GFEDF {
             if ( is_user_logged_in() ) {
                 $current_user = wp_get_current_user();
                 $username = $current_user->user_login;
-                //$username = "nicole.swan";
-                $this->empdata = new EmployeeData( $username );
-                $isEmp = $this->empdata->is_employee();
-                //echo "Is employee?: "; var_dump($isEmp);
-                //var_dump($this->empdata);
+                $student_only_domain = '@my.bellevuecollege.edu';
+                $is_student_only_account = substr_compare(
+                    $username,
+                    $student_only_domain,
+                    -strlen( $student_only_domain ),
+                    strlen( $student_only_domain ),
+                    true
+                ) === 0;
+
+                // Always query students first; my.bellevuecollege.edu accounts are student-only.
+                $this->studentdata = new StudentData( $username );
+
+                $isEmp = false;
+                if ( ! $is_student_only_account ) {
+                    $this->empdata = new EmployeeData( $username );
+                    $isEmp = $this->empdata->is_employee();
+                }
+
                 /*
                 *  Limited access for employees or student based on shortcode attribute value.
                 */
                 $restrict_attr = GFEDF_Config::get_restrict_attr();
                 if ( isset( $restrict_attr )  && !empty($this->shortcode) ) {
-                    //var_dump($this->shortcode);
                     $matchedEl = $this->shortcode->get_attribute_value( $restrict_attr );
-                    //echo "matchedEL: " . $matchedEl;
                     if ( isset( $matchedEl ) ) {
                         $matchedVal = strtolower( $matchedEl );
                         if ( isset( $matchedVal ) && !empty( $matchedVal ) ) {
                             switch ( $matchedVal ) {
                                 case "employees":
                                     //Check if the user is an employee or not
-                                    //echo "in employees";
                                     if ( !$isEmp ) {
-                                        //echo "You don't have permission to access this form.";
                                         $redirect_url = $this->shortcode->get_attribute_value( GFEDF_Config::get_restrict_fail_redirect_attr() );
                                         if ( isset( $redirect_url ) && !empty( $redirect_url ) ) {
                                             $sanitize_url = esc_url( $redirect_url );
@@ -209,7 +218,6 @@ class GFEDF {
                                                 Header ( 'Location:' . $sanitize_url );
                                             }
                                         }
-                                        //echo "You don't have permission to view the form.";
                                         exit();
 
                                     }
@@ -220,8 +228,6 @@ class GFEDF {
 
                     }
                 }
-
-                $this->studentdata = new StudentData( $username );
             }
         }
     }
