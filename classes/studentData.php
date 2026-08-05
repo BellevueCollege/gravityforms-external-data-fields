@@ -8,6 +8,7 @@ class StudentData {
     const UNSPECIFIED_DOMAIN = "UNSPECIFIED";
 
     private $has_student_record;
+    private $is_lookup_available = true;
     private $first_name = "";
     private $last_name = "";
     private $student_id = "";
@@ -31,8 +32,11 @@ class StudentData {
         try {
             debug_log( "Query Data API for user '" . $this->username . "'..." );
 
-            $stu_info = DataApi::get_student($this->username);
-            if ( isset($stu_info) ) {
+            $result = DataApi::get_student($this->username);
+            $status = isset( $result['status'] ) ? $result['status'] : DataApi::STATUS_UNAVAILABLE;
+
+            if ( $status === DataApi::STATUS_FOUND && ! empty( $result['data'] ) ) {
+                $stu_info = $result['data'];
                 $this->has_student_record = true;
 
                 $this->student_id = $stu_info['EMPLID'];
@@ -44,10 +48,15 @@ class StudentData {
 
                 debug_log( "Successfully retrieved student info: $this->student_id, $this->first_name $this->last_name, $this->email" );
             }
+            else if ( $status === DataApi::STATUS_UNAVAILABLE ) {
+                $this->is_lookup_available = false;
+                debug_log( sprintf("Student lookup unavailable for username %s.", $login) );
+            }
             else {
                 debug_log( sprintf("Username %s does not have a student record.", $login) );
             }
         } catch ( Exception $ex ) {
+            $this->is_lookup_available = false;
             debug_log( "GF External Data Fields plugin :: An exception occurred while retrieving student data! See error log." );
             error_log( "GF External Data Fields plugin :: Failed to retrieve student data: " . $ex->getMessage() );
         }
@@ -58,6 +67,15 @@ class StudentData {
     */
     public function has_student_record() {
         return $this->has_student_record;
+    }
+
+    /**
+     * Whether the student Data API lookup completed normally (found or not found).
+     *
+     * @return bool
+     */
+    public function is_lookup_available() {
+        return $this->is_lookup_available;
     }
 
     /**

@@ -18,10 +18,34 @@ require_once( "classes/employeeData.php" );
 //error_reporting ( E_ALL ^ E_NOTICE ); // Report all errors except E_NOTICE
 
 class GFEDF {
-    
-    protected $studentdata; 
+
+    const STATUS_OK = 'ok';
+
+    protected $studentdata;
     protected $empdata;
     protected $shortcode;
+
+    /**
+     * Aggregated external data lookup status for the current request.
+     * null | ok | not_found | unavailable
+     *
+     * @var string|null
+     */
+    protected $externalDataStatus = null;
+
+    /**
+     * Dynamic population parameter names provided by this plugin.
+     *
+     * @var array
+     */
+    protected $externalDataParameters = array(
+        'bc_sid',
+        'bc_first_name',
+        'bc_last_name',
+        'bc_email',
+        'bc_dayphone',
+        'bc_evephone',
+    );
 
     function __construct() {
         $this->studentdata = new StudentData();
@@ -41,6 +65,9 @@ class GFEDF {
         add_filter( 'gform_field_value_bc_email', array( $this, 'populate_bc_email' ) );
         add_filter( 'gform_field_value_bc_dayphone', array( $this, 'populate_bc_dayphone' ) );
         add_filter( 'gform_field_value_bc_evephone', array( $this, 'populate_bc_evephone' ) );
+
+        add_filter( 'gform_get_form_filter', array( $this, 'maybe_block_form_display' ), 10, 2 );
+        add_filter( 'gform_validation', array( $this, 'maybe_block_form_submission' ) );
 
         //shortcode filters
         add_shortcode( 'gfedf_redirect_to_login', array( $this, 'gfedf_login_redirect' ) );
@@ -154,6 +181,122 @@ class GFEDF {
         return $bc_evephone;
     }
 
+    /**
+     * Whether the form uses any plugin external-data population parameters.
+     *
+     * @param array $form Gravity Forms form object.
+     * @return bool
+     */
+    protected function form_uses_external_data_fields( $form ) {
+        $fields = rgar( $form, 'fields' );
+        if ( empty( $fields ) || ! is_array( $fields ) ) {
+            return false;
+        }
+
+        foreach ( $fields as $field ) {
+            if ( ! empty( $field->inputName ) && in_array( $field->inputName, $this->externalDataParameters, true ) ) {
+                return true;
+            }
+
+            if ( empty( $field->inputs ) || ! is_array( $field->inputs ) ) {
+                continue;
+            }
+
+            foreach ( $field->inputs as $input ) {
+                $input_name = rgar( $input, 'name' );
+                if ( ! empty( $input_name ) && in_array( $input_name, $this->externalDataParameters, true ) ) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Aggregate student/employee lookup results into a single status.
+     *
+     * @return string ok|not_found|unavailable
+     */
+    protected function aggregate_external_data_status() {
+        $has_employee = $this->empdata && $this->empdata->is_employee();
+
+        if ( $this->studentdata->has_student_record() || $has_employee ) {
+            return self::STATUS_OK;
+        }
+
+        $employee_unavailable = $this->empdata && ! $this->empdata->is_lookup_available();
+        if ( ! $this->studentdata->is_lookup_available() || $employee_unavailable ) {
+            return DataApi::STATUS_UNAVAILABLE;
+        }
+
+        return DataApi::STATUS_NOT_FOUND;
+    }
+
+    /**
+     * Human-readable message for the current blocking status.
+     *
+     * @return string
+     */
+    protected function get_external_data_error_message() {
+        if ( $this->externalDataStatus === DataApi::STATUS_UNAVAILABLE ) {
+            return 'We are temporarily unable to load your information from college systems, so this form cannot be loaded. Please try again later. If the problem continues, contact Bellevue College support.';
+        }
+
+        return 'We could not find a matching student or employee record for your account, so this form cannot be loaded. If you believe this is an error, please contact Bellevue College support.';
+    }
+
+    /**
+     * Whether dependent forms should be blocked for the current request.
+     *
+     * @return bool
+     */
+    protected function should_block_external_data_form() {
+        return $this->externalDataStatus === DataApi::STATUS_NOT_FOUND
+            || $this->externalDataStatus === DataApi::STATUS_UNAVAILABLE;
+    }
+
+    /**
+     * Replace form markup when external data is missing or unavailable.
+     *
+     * @param string $form_string Generated form HTML.
+     * @param array  $form        Form object.
+     * @return string
+     */
+    function maybe_block_form_display( $form_string, $form ) {
+        if ( ! $this->should_block_external_data_form() || ! $this->form_uses_external_data_fields( $form ) ) {
+            return $form_string;
+        }
+
+        // Reuse Gravity Forms validation styling for a familiar error presentation.
+        return "<div class='validation_error alert alert-danger'>" . esc_html( $this->get_external_data_error_message() ) . '</div>';
+    }
+
+    /**
+     * Reject submissions when external data is missing or unavailable.
+     *
+     * @param array $validation_result Gravity Forms validation result.
+     * @return array
+     */
+    function maybe_block_form_submission( $validation_result ) {
+        $form = $validation_result['form'];
+
+        if ( ! $this->should_block_external_data_form() || ! $this->form_uses_external_data_fields( $form ) ) {
+            return $validation_result;
+        }
+
+        $validation_result['is_valid'] = false;
+
+        // Standard Gravity Forms pattern: mark a field failed so the form-level error is shown.
+        if ( ! empty( $form['fields'][0] ) ) {
+            $form['fields'][0]->failed_validation  = true;
+            $form['fields'][0]->validation_message = $this->get_external_data_error_message();
+        }
+
+        $validation_result['form'] = $form;
+        return $validation_result;
+    }
+
     /*******
     * Check if user authenticated, then gather data for user.
     * Also checks if 'allow' is set to restrict type of user and redirects as necessary
@@ -191,9 +334,17 @@ class GFEDF {
                     $isEmp = $this->empdata->is_employee();
                 }
 
+                $this->externalDataStatus = $this->aggregate_external_data_status();
+                debug_log( "GFEDF :: aggregated external data status: " . $this->externalDataStatus );
+
                 /*
                 *  Limited access for employees or student based on shortcode attribute value.
+                *  Skip redirects when the Data API is unavailable so an outage is not treated as "not an employee".
                 */
+                if ( $this->externalDataStatus === DataApi::STATUS_UNAVAILABLE ) {
+                    return;
+                }
+
                 $restrict_attr = GFEDF_Config::get_restrict_attr();
                 if ( isset( $restrict_attr )  && !empty($this->shortcode) ) {
                     $matchedEl = $this->shortcode->get_attribute_value( $restrict_attr );

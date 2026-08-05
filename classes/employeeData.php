@@ -12,6 +12,7 @@ class EmployeeData {
 	private $phone;
 	private $username;
 	private $has_student_record;
+	private $is_lookup_available = true;
 
 	function __construct( $login ) {
 		$this->username = $login;
@@ -27,9 +28,11 @@ class EmployeeData {
 			if ( isset( $this->username ) ) {
 				debug_log( "GF External Data Fields plugin :: Query Data API for user '" . $this->username . "'..." );
 
-				$emp_info = DataApi::get_employee( $this->username );
-				//echo $emp_info;
-				if ( isset( $emp_info ) ) {
+				$result = DataApi::get_employee( $this->username );
+				$status = isset( $result['status'] ) ? $result['status'] : DataApi::STATUS_UNAVAILABLE;
+
+				if ( $status === DataApi::STATUS_FOUND && ! empty( $result['data'] ) ) {
+					$emp_info = $result['data'];
 
 					$this->sid = $emp_info['EMPLID'];
 					$this->first_name = $emp_info['firstName'];
@@ -40,11 +43,16 @@ class EmployeeData {
 
 					debug_log( "GF External Data Fields plugin :: Successfully retrieved employee info: $this->sid, $this->first_name $this->last_name, $this->email" );
 				}
+				else if ( $status === DataApi::STATUS_UNAVAILABLE ) {
+					$this->is_lookup_available = false;
+					debug_log( sprintf( "Employee lookup unavailable for username %s.", $this->username ) );
+				}
 				else {
 					debug_log( sprintf( "Username %s does not have an employee record.", $this->username ) );
 				}
 			}
         } catch ( Exception $ex ) {
+			$this->is_lookup_available = false;
             error_log( "GF External Data Fields plugin :: Failed to retrieve employee data: " . $ex->getMessage() );
         }
 	}
@@ -56,6 +64,15 @@ class EmployeeData {
 		} else {
 			return false;
 		}
+	}
+
+	/**
+	 * Whether the employee Data API lookup completed normally (found or not found).
+	 *
+	 * @return bool
+	 */
+	public function is_lookup_available() {
+		return $this->is_lookup_available;
 	}
 
 	// get functions for class members

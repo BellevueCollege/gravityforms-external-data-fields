@@ -3,6 +3,22 @@
 
 class DataApi {
 
+    const STATUS_FOUND = 'found';
+    const STATUS_NOT_FOUND = 'not_found';
+    const STATUS_UNAVAILABLE = 'unavailable';
+
+    /**
+     * @param string     $status One of STATUS_FOUND, STATUS_NOT_FOUND, STATUS_UNAVAILABLE.
+     * @param array|null $data   Payload when status is found.
+     * @return array
+     */
+    private static function build_result( $status, $data = null ) {
+        return array(
+            'status' => $status,
+            'data'   => $data,
+        );
+    }
+
     //Sends authentication request to DataAPI using app's client key and client id
     public static function authenticate(){
 
@@ -47,10 +63,16 @@ class DataApi {
     }
 
     // Make call to DataApi endpoint
-    public static function get_url( $_url ) {
+    public static function get_url( $_url, $isRetry = false ) {
 
         // get valid authorization header
         $headers = self::create_authorization_header();
+        if ( is_null( $headers ) ) {
+            error_log( print_r( "GF External Data Fields plugin :: Data API token unavailable; cannot call endpoint.", true ) );
+            debug_log( print_r( "GF External Data Fields plugin :: Data API token unavailable; cannot call endpoint.", true ) );
+            return self::build_result( self::STATUS_UNAVAILABLE );
+        }
+
         try {
             //make url call
             $resp = wp_remote_get( $_url, array( 'headers' => $headers, 'sslverify' => GFEDF_Config::get_data_api_sslverify() ) );
@@ -59,40 +81,57 @@ class DataApi {
 
                 //if error, log it
                 $error_message = $resp->get_error_message();
-                error_log( print_r( "GF External Data Fields plugin :: error authenticating to Data API - " . $error_message, true ) );
-                debug_log( print_r( "GF External Data Fields plugin :: error authenticating to Data API - " . $error_message, true ) );
-                return null;
-            } else {
+                error_log( print_r( "GF External Data Fields plugin :: error calling Data API - " . $error_message, true ) );
+                debug_log( print_r( "GF External Data Fields plugin :: error calling Data API - " . $error_message, true ) );
+                return self::build_result( self::STATUS_UNAVAILABLE );
+            }
 
-                //handle non-error response
-                $json = $resp;
-                $response_code = $json["response"]["code"];
+            $response_code = (int) wp_remote_retrieve_response_code( $resp );
 
-                if ( isset( $json ) && $response_code == 401 ) {
+            if ( $response_code == 401 ) {
 
-                    // token is likely expired so reauthenticate and retry data call
-                    debug_log( print_r("GFEDF :: Authentication token is likely expired. Attempting to reauthenticate.", true) );
-                    self::authenticate();
-                    return self::get_url( $_url );
-                
-                } else if ( isset( $json ) ) {
-
-                    // it's a valid response, so use it
-                    $body = json_decode( $json['body'], true );
-                    //var_dump($body);
-                    if ( !empty( $body ) ) {
-                        return $body['data'];
-                    } else {
-                        return null;
-                    }
-                } else {
-                    return null;
+                if ( $isRetry ) {
+                    error_log( print_r( "GF External Data Fields plugin :: Data API still unauthorized after re-authentication.", true ) );
+                    debug_log( print_r( "GF External Data Fields plugin :: Data API still unauthorized after re-authentication.", true ) );
+                    return self::build_result( self::STATUS_UNAVAILABLE );
                 }
+
+                // token is likely expired so reauthenticate and retry data call
+                debug_log( print_r("GFEDF :: Authentication token is likely expired. Attempting to reauthenticate.", true) );
+                $token = self::authenticate();
+                if ( empty( $token ) ) {
+                    error_log( print_r( "GF External Data Fields plugin :: re-authentication failed; Data API unavailable.", true ) );
+                    debug_log( print_r( "GF External Data Fields plugin :: re-authentication failed; Data API unavailable.", true ) );
+                    return self::build_result( self::STATUS_UNAVAILABLE );
+                }
+
+                return self::get_url( $_url, true );
+
+            }
+
+            if ( $response_code == 404 ) {
+                return self::build_result( self::STATUS_NOT_FOUND );
+            }
+
+            // Anything outside 2xx (after 401/404 handling) is treated as unavailable.
+            if ( $response_code < 200 || $response_code >= 300 ) {
+                error_log( print_r( "GF External Data Fields plugin :: unexpected Data API response code " . $response_code, true ) );
+                debug_log( print_r( "GF External Data Fields plugin :: unexpected Data API response code " . $response_code, true ) );
+                return self::build_result( self::STATUS_UNAVAILABLE );
+            }
+
+            // it's a valid response, so use it
+            $body = json_decode( wp_remote_retrieve_body( $resp ), true );
+            //var_dump($body);
+            if ( ! empty( $body['data'] ) ) {
+                return self::build_result( self::STATUS_FOUND, $body['data'] );
+            } else {
+                return self::build_result( self::STATUS_NOT_FOUND );
             }
         } catch ( Exception $e ){
             error_log( print_r("GF External Data Fields plugin :: error building and saving model - " . $e->getMessage(), true) );
             debug_log( print_r("GF External Data Fields plugin :: error building and saving model - " . $e->getMessage(), true) );
-            return null;
+            return self::build_result( self::STATUS_UNAVAILABLE );
         }
     }
 
@@ -109,6 +148,9 @@ class DataApi {
     // create authorization bearer/token header to use in request
     public static function create_authorization_header(){
         $token = self::get_token();
+        if ( empty( $token ) ) {
+            return null;
+        }
 
         $headers = array('Authorization' => 'Bearer ' . $token );
 
