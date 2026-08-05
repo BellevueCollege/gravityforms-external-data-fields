@@ -1,3 +1,4 @@
+# Ignore leftover local plugin config from the pre-wp-config setup
 config.php
 
 # Default WordPress ignores provided by Github

@@ -1,5 +1,4 @@
 <?php
-require_once( dirname( plugin_dir_path( __FILE__ ) ) . "/config.php" );
 require_once( "utilities.php" );
 
 /**

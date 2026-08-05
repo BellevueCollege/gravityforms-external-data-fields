@@ -11,7 +11,7 @@ GitHub Plugin URI: bellevuecollege/gravityforms-external-data-fields
 
 defined ( 'ABSPATH' ) OR exit;
 
-require_once( "config.php" );
+require_once( plugin_dir_path( __FILE__ ) . 'classes/config.php' );
 require_once( "classes/shortcode.php" );
 require_once( "classes/studentData.php" );
 require_once( "classes/employeeData.php" );

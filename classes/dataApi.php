@@ -1,8 +1,6 @@
 <?php 
 /* Data API class for authentication and accessing endpoints */
 
-require_once( dirname( plugin_dir_path( __FILE__ ) ) . "/config.php" );
-
 class DataApi {
 
     //Sends authentication request to DataAPI using app's client key and client id
