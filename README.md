@@ -62,9 +62,24 @@ Log in to continue. [gfedf_redirect_to_login]
 Log in to continue. [gfedf_redirect_to_login class="btn btn-primary"]
 ```
 
+#### Autofill parameters
+
+To pre-populate a Gravity Forms field, open the field in the Form Editor, go to the **Advanced** tab, enable **Allow field to be populated dynamically**, and enter one of the parameter names below.
+
+| Parameter | Description | Student | Employee |
+|---|---|---|---|
+| `bc_sid` | Student/employee ID (EMPLID) | ✓ | ✓ |
+| `bc_first_name` | First name | ✓ | ✓ |
+| `bc_last_name` | Last name | ✓ | ✓ |
+| `bc_email` | Email address | ✓ | ✓ |
+| `bc_dayphone` | Daytime phone | ✓ | ✓ (uses employee phone) |
+| `bc_evephone` | Evening phone | ✓ | — |
+
+Student data is preferred when the logged-in user has a student record; otherwise employee data is used (except `bc_evephone`, which is student-only).
+
 #### Additional functionality
 
-[Visit the wiki](https://github.com/BellevueCollege/gravityforms-external-data-fields/wiki/Plugin-Functionality) for additional info on prepopulating fields or restricting the login to only employees.
+[Visit the wiki](https://github.com/BellevueCollege/gravityforms-external-data-fields/wiki/Plugin-Functionality) for additional info on restricting the login to only employees.
 
 
 ### Updates
