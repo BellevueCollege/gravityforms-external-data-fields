@@ -6,14 +6,14 @@ require_once( "utilities.php" );
     * shortcode string
 */
 class GFEDF_Shortcode {
-    protected $shortcode_str;   // the shortcode attribute string retrieved from content
+    protected $shortcode_str = '';   // the shortcode attribute string retrieved from content
     protected $shortcode_names = array('gravityform', 'gravityforms');  //valid gravity forms shortcode names
 
     /**
     * @param      $_shortcode_str
     */
     function __construct( $_shortcode_str = null ) {
-        $this->shortcode_str = $_shortcode_str;
+        $this->shortcode_str = $_shortcode_str ?? '';
     }
 
     /**
@@ -28,7 +28,7 @@ class GFEDF_Shortcode {
         else {
             $regex = "/$_attribute\s*=\s*\"\s*(\S*)\s*\"/i";
 
-            $has_auth_param = preg_match( $regex, $this->shortcode_str, $matches );
+            preg_match( $regex, $this->shortcode_str, $matches );
             if ( isset( $matches[1] ) )
                 return $matches[1];
             else

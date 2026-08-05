@@ -12,7 +12,7 @@ class StudentData {
     private $last_name = "";
     private $student_id = "";
     private $email = "";
-    private $phone_day = "";
+    private $phone_daytime = "";
     private $phone_evening = "";
     private $username = "";
     private $domain = self::UNSPECIFIED_DOMAIN;
