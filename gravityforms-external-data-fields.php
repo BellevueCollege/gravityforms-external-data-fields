@@ -34,6 +34,13 @@ class GFEDF {
     protected $externalDataStatus = null;
 
     /**
+     * Whether the current page shortcode restricts access to employees.
+     *
+     * @var bool
+     */
+    protected $requiresEmployeeAccess = false;
+
+    /**
      * Dynamic population parameter names provided by this plugin.
      *
      * @var array
@@ -88,7 +95,7 @@ class GFEDF {
         if ( !empty( $content ) ) {
             $content_val = esc_html( $content ); 
         }
-        return "<a href='$redirect_url' title='Log in' $class_attr>" . $content_val . "</a>";
+        return "<a href='" . esc_url( $redirect_url ) . "' title='Log in' $class_attr>" . $content_val . "</a>";
     }
 
     ###########################################
@@ -100,6 +107,7 @@ class GFEDF {
     function populate_bc_sid( $value ) {
         debug_log ( "(= gform_field_value_bc_sid =) Setting SID..." );
 
+        $bc_sid = '';
         if ( $this->studentdata->has_student_record() )
             $bc_sid = $this->studentdata->get_student_id();
         else {
@@ -115,6 +123,7 @@ class GFEDF {
     function populate_bc_first_name( $value ) {
         debug_log ( "(= gform_field_value_bc_first_name =) Setting first name..." );
 
+        $bc_first_name = '';
         if ( $this->studentdata->has_student_record() )
             $bc_first_name = $this->studentdata->get_first_name();
         else {
@@ -130,6 +139,7 @@ class GFEDF {
     function populate_bc_last_name( $value ) {
         debug_log ( "(= gform_field_value_bc_last_name =) Setting last name..." );
 
+        $bc_last_name = '';
         if ( $this->studentdata->has_student_record() )
             $bc_last_name = $this->studentdata->get_last_name();
         else {
@@ -145,6 +155,7 @@ class GFEDF {
     function populate_bc_email( $value ) {
         debug_log ( "(= gform_field_value_bc_email =) Setting email..." );
 
+        $bc_email = '';
         if ( $this->studentdata->has_student_record() )
             $bc_email = $this->studentdata->get_email();
         else {
@@ -160,6 +171,7 @@ class GFEDF {
     function populate_bc_dayphone( $value ) {
         debug_log ( "(= gform_field_value_bc_dayphone =) Setting daytime phone..." );
 
+        $bc_dayphone = '';
         if ( $this->studentdata->has_student_record() )
             $bc_dayphone = $this->studentdata->get_daytime_phone();
         else {
@@ -254,6 +266,14 @@ class GFEDF {
      * @return bool
      */
     protected function should_block_external_data_form() {
+        // Fail closed: employee-only pages require a confirmed employee match.
+        if ( $this->requiresEmployeeAccess ) {
+            $is_employee = $this->empdata && $this->empdata->is_employee();
+            if ( ! $is_employee ) {
+                return true;
+            }
+        }
+
         return $this->externalDataStatus === DataApi::STATUS_NOT_FOUND
             || $this->externalDataStatus === DataApi::STATUS_UNAVAILABLE;
     }
@@ -266,7 +286,11 @@ class GFEDF {
      * @return string
      */
     function maybe_block_form_display( $form_string, $form ) {
-        if ( ! $this->should_block_external_data_form() || ! $this->form_uses_external_data_fields( $form ) ) {
+        if ( ! $this->should_block_external_data_form() ) {
+            return $form_string;
+        }
+
+        if ( ! $this->requiresEmployeeAccess && ! $this->form_uses_external_data_fields( $form ) ) {
             return $form_string;
         }
 
@@ -288,7 +312,11 @@ class GFEDF {
     function maybe_block_form_submission( $validation_result ) {
         $form = $validation_result['form'];
 
-        if ( ! $this->should_block_external_data_form() || ! $this->form_uses_external_data_fields( $form ) ) {
+        if ( ! $this->should_block_external_data_form() ) {
+            return $validation_result;
+        }
+
+        if ( ! $this->requiresEmployeeAccess && ! $this->form_uses_external_data_fields( $form ) ) {
             return $validation_result;
         }
 
@@ -323,6 +351,10 @@ class GFEDF {
 
             $this->shortcode->get_shortcode_from_content($content);
 
+            $restrict_attr = GFEDF_Config::get_restrict_attr();
+            $restrict_value = $this->shortcode->get_attribute_value( $restrict_attr );
+            $this->requiresEmployeeAccess = ( ! empty( $restrict_value ) && strtolower( $restrict_value ) === 'employees' );
+
             if ( is_user_logged_in() ) {
                 $current_user = wp_get_current_user();
                 $username = $current_user->user_login;
@@ -348,45 +380,19 @@ class GFEDF {
                 debug_log( "GFEDF :: aggregated external data status: " . $this->externalDataStatus );
 
                 /*
-                *  Limited access for employees or student based on shortcode attribute value.
-                *  Skip redirects when the Data API is unavailable so an outage is not treated as "not an employee".
-                */
-                if ( $this->externalDataStatus === DataApi::STATUS_UNAVAILABLE ) {
-                    return;
-                }
-
-                $restrict_attr = GFEDF_Config::get_restrict_attr();
-                if ( isset( $restrict_attr )  && !empty($this->shortcode) ) {
-                    $matchedEl = $this->shortcode->get_attribute_value( $restrict_attr );
-                    if ( isset( $matchedEl ) ) {
-                        $matchedVal = strtolower( $matchedEl );
-                        if ( isset( $matchedVal ) && !empty( $matchedVal ) ) {
-                            switch ( $matchedVal ) {
-                                case "employees":
-                                    //Check if the user is an employee or not
-                                    if ( !$isEmp ) {
-                                        $redirect_url = $this->shortcode->get_attribute_value( GFEDF_Config::get_restrict_fail_redirect_attr() );
-                                        if ( isset( $redirect_url ) && !empty( $redirect_url ) ) {
-                                            $sanitize_url = esc_url( $redirect_url );
-                                            Header( 'Location:' . $sanitize_url );
-                                            exit();
-                                        }
-                                        else {
-                                            //should go to a default url
-                                            $default_url = GFEDF_Config::get_default_redirect_url();
-                                            if ( isset( $default_url ) && !empty( $default_url ) ) {
-                                                $sanitize_url = esc_url( $default_url );
-                                                Header ( 'Location:' . $sanitize_url );
-                                            }
-                                        }
-                                        exit();
-
-                                    }
-                                    break;
-
-                            }
-                        }
-
+                 * Limited access for employees based on shortcode attribute.
+                 * Redirect only when the lookup completed and the user is not an employee.
+                 * During an API outage, fail closed via maybe_block_* instead of redirecting.
+                 */
+                if ( $this->requiresEmployeeAccess && ! $isEmp
+                    && $this->externalDataStatus !== DataApi::STATUS_UNAVAILABLE ) {
+                    $redirect_url = $this->shortcode->get_attribute_value( GFEDF_Config::get_restrict_fail_redirect_attr() );
+                    if ( empty( $redirect_url ) ) {
+                        $redirect_url = GFEDF_Config::get_default_redirect_url();
+                    }
+                    if ( ! empty( $redirect_url ) ) {
+                        wp_safe_redirect( $redirect_url );
+                        exit;
                     }
                 }
             }

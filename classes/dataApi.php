@@ -1,5 +1,7 @@
-<?php 
+<?php
 /* Data API class for authentication and accessing endpoints */
+
+defined( 'ABSPATH' ) || exit;
 
 class DataApi {
 
@@ -17,6 +19,108 @@ class DataApi {
             'status' => $status,
             'data'   => $data,
         );
+    }
+
+    /**
+     * Encryption key derived from WordPress auth salt.
+     *
+     * @return string Binary key material for XSalsa20-Poly1305 (32 bytes).
+     */
+    private static function get_token_encryption_key() {
+        return hash( 'sha256', wp_salt( 'auth' ), true );
+    }
+
+    /**
+     * Encrypt a bearer token for transient storage using XSalsa20-Poly1305.
+     *
+     * @param string $token Plaintext access token.
+     * @return string|null Base64-encoded nonce + ciphertext, or null on failure.
+     */
+    private static function encrypt_token( $token ) {
+        try {
+            $nonce = random_bytes( SODIUM_CRYPTO_SECRETBOX_NONCEBYTES );
+            $ciphertext = sodium_crypto_secretbox(
+                $token,
+                $nonce,
+                self::get_token_encryption_key()
+            );
+        } catch ( \Throwable $throwable ) {
+            return null;
+        }
+
+        return base64_encode( $nonce . $ciphertext );
+    }
+
+    /**
+     * Decrypt a bearer token from transient storage using XSalsa20-Poly1305.
+     *
+     * @param string $encrypted_token Base64-encoded nonce + ciphertext.
+     * @return string|null Plaintext token, or null on failure.
+     */
+    private static function decrypt_token( $encrypted_token ) {
+        $decoded = base64_decode( $encrypted_token, true );
+        if ( false === $decoded ) {
+            return null;
+        }
+
+        if ( strlen( $decoded ) <= SODIUM_CRYPTO_SECRETBOX_NONCEBYTES ) {
+            return null;
+        }
+
+        $nonce = substr( $decoded, 0, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES );
+        $ciphertext = substr( $decoded, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES );
+
+        try {
+            $token = sodium_crypto_secretbox_open(
+                $ciphertext,
+                $nonce,
+                self::get_token_encryption_key()
+            );
+        } catch ( \Throwable $throwable ) {
+            return null;
+        }
+
+        if ( false === $token || $token === '' ) {
+            return null;
+        }
+
+        return $token;
+    }
+
+    /**
+     * Persist an encrypted token in a transient and remove any legacy plaintext option.
+     *
+     * @param string $token Plaintext access token.
+     * @return void
+     */
+    private static function store_token( $token ) {
+        $token_key = GFEDF_Config::get_data_api_token_option_name();
+        $encrypted_token = self::encrypt_token( $token );
+
+        if ( ! empty( $encrypted_token ) ) {
+            set_transient( $token_key, $encrypted_token, GFEDF_Config::get_data_api_token_ttl() );
+        }
+
+        delete_option( $token_key );
+    }
+
+    // get token from encrypted transient or authenticate to get valid token
+    public static function get_token(){
+        $token_key = GFEDF_Config::get_data_api_token_option_name();
+        $encrypted_token = get_transient( $token_key );
+        $token_val = '';
+
+        if ( ! empty( $encrypted_token ) && is_string( $encrypted_token ) ) {
+            $token_val = self::decrypt_token( $encrypted_token );
+        }
+
+        if ( empty( $token_val ) ){
+            // Remove any legacy plaintext option; do not migrate it.
+            delete_option( $token_key );
+            //token not set so authenticate to generate
+            $token_val = self::authenticate();
+        }
+        return $token_val;
     }
 
     //Sends authentication request to DataAPI using app's client key and client id
@@ -39,7 +143,7 @@ class DataApi {
             if ( !empty($json['access_token'])) {
                 //get token from response and save
                 $token = $json['access_token'];
-                update_option(GFEDF_Config::get_data_api_token_option_name(), $token);
+                self::store_token( $token );
                 return $token;
             } else {
                 error_log( print_r("GF External Data Fields plugin :: error authenticating to Data API.", true) );
@@ -133,16 +237,6 @@ class DataApi {
             debug_log( print_r("GF External Data Fields plugin :: error building and saving model - " . $e->getMessage(), true) );
             return self::build_result( self::STATUS_UNAVAILABLE );
         }
-    }
-
-    // get token from saved plugin option or authenticate to get valid token
-    public static function get_token(){
-        $token_val = get_option(GFEDF_Config::get_data_api_token_option_name());
-        if ( empty($token_val) ){
-            //token not set so authenticate to generate
-            $token_val = self::authenticate();
-        }
-        return $token_val;
     }
 
     // create authorization bearer/token header to use in request

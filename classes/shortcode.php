@@ -1,4 +1,6 @@
 <?php
+defined( 'ABSPATH' ) || exit;
+
 require_once( "utilities.php" );
 
 /**
@@ -26,7 +28,7 @@ class GFEDF_Shortcode {
         if ( !isset( $_attribute ) || empty( $_attribute ) )
             return null;
         else {
-            $regex = "/$_attribute\s*=\s*\"\s*(\S*)\s*\"/i";
+            $regex = '/' . preg_quote( $_attribute, '/' ) . '\s*=\s*"\s*(\S*)\s*"/i';
 
             preg_match( $regex, $this->shortcode_str, $matches );
             if ( isset( $matches[1] ) )

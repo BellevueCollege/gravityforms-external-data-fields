@@ -1,19 +1,9 @@
 <?php
 
+defined( 'ABSPATH' ) || exit;
+
 // Disable to turn off debug logging
 define ( "ENABLE_DEBUG_LOG", false );
-define ( "DEBUG_LOG_PATH", dirname ( __FILE__ ) . "/debug.log" );
-
-/**
-* @param $haystack
-* @param $needle
-* @return bool
-*/
-/*function str_starts_with( $haystack, $needle ) {
-    $idx = stripos ( $haystack, $needle );
-
-    return ( false !== $idx && 0 == $idx );
-}*/
 
 /**
 * @param $message
@@ -21,9 +11,7 @@ define ( "DEBUG_LOG_PATH", dirname ( __FILE__ ) . "/debug.log" );
 function debug_log( $message ) {
     if ( ENABLE_DEBUG_LOG ) {
         $date = new DateTime();
-        if ( !error_log( site_name () . ": [" . $date->format ( 'Y-m-d H:i:s' ) . "] " . $message . "\n", 3, DEBUG_LOG_PATH ) ) {
-            error_log( "UNABLE TO WRITE TO DEBUG LOG (" . DEBUG_LOG_PATH . "): '" . $message . "'" );
-        }
+        error_log( site_name () . ": [" . $date->format ( 'Y-m-d H:i:s' ) . "] " . $message );
     }
 }
 

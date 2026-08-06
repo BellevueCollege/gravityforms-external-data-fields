@@ -1,6 +1,8 @@
 <?php
 /**
 **/
+defined( 'ABSPATH' ) || exit;
+
 require_once("dataApi.php");
 require_once("utilities.php");
 

@@ -27,20 +27,22 @@ define( 'GFEDF_DATA_API_CLIENT_KEY', 'your-client-key' );
 | Constant | Default | Description |
 |---|---|---|
 | `GFEDF_RESTRICT_ATTR` | `allow` | Restriction attribute used in the Gravity Forms shortcode |
-| `GFEDF_RESTRICT_FAIL_REDIRECT_ATTR` | `failure_redirect_url` | Shortcode attribute for redirect URL when restriction fails |
-| `GFEDF_DEFAULT_REDIRECT_URL` | `""` | Default redirect URL if none is provided in the shortcode |
+| `GFEDF_RESTRICT_FAIL_REDIRECT_ATTR` | `failure_redirect_url` | Shortcode attribute for redirect URL when restriction fails (must be an on-site URL; uses `wp_safe_redirect`) |
+| `GFEDF_DEFAULT_REDIRECT_URL` | `""` | Default redirect URL if none is provided in the shortcode (must be on-site) |
 | `GFEDF_DATA_API_STUB_EMP` | `employee/%s` | Employee endpoint path stub |
 | `GFEDF_DATA_API_STUB_STU` | `student/%s` | Student endpoint path stub |
 | `GFEDF_DATA_API_STUB_AUTH` | `auth/login` | Auth/login endpoint path stub |
-| `GFEDF_DATA_API_TOKEN_OPTION_NAME` | `gfedf_dataapi_token` | WP option name for the saved API token |
-| `GFEDF_DATA_API_SSLVERIFY` | `false` | Whether SSL is verified on Data API requests |
+| `GFEDF_DATA_API_TOKEN_OPTION_NAME` | `gfedf_dataapi_token` | Transient key for the encrypted API token |
+| `GFEDF_DATA_API_TOKEN_TTL` | `HOUR_IN_SECONDS` | TTL in seconds for the encrypted API token transient |
+| `GFEDF_DATA_API_SSLVERIFY` | `true` | Whether SSL is verified on Data API requests |
 
-SSL verification defaults to `false` (current behavior). Set `GFEDF_DATA_API_SSLVERIFY` to `true` in production when ready:
+SSL verification defaults to `true`. Set `GFEDF_DATA_API_SSLVERIFY` to `false` only for broken local/dev certificates:
 
 ```php
-define( 'GFEDF_DATA_API_SSLVERIFY', true );
+define( 'GFEDF_DATA_API_SSLVERIFY', false );
 ```
 
+The Data API bearer token is stored encrypted (OpenSSL AES-256-CBC, key from `wp_salt( 'auth' )`) in a WordPress transient that expires after the configured TTL.
 #### Migrating from `config.php`
 
 If you previously used a plugin-root `config.php` copied from `config-sample.php`, move those values into the corresponding `GFEDF_*` constants in `wp-config.php`, then delete the plugin `config.php` file.

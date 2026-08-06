@@ -93,7 +93,7 @@ class GFEDF_Config {
 	}
 
 	/**
-	 * WordPress option name used to store the Data API access token.
+	 * WordPress transient key used to store the encrypted Data API access token.
 	 *
 	 * @return string
 	 */
@@ -104,14 +104,24 @@ class GFEDF_Config {
 	}
 
 	/**
+	 * TTL in seconds for the encrypted Data API token transient.
+	 *
+	 * @return int
+	 */
+	public static function get_data_api_token_ttl() {
+		return defined( 'GFEDF_DATA_API_TOKEN_TTL' )
+			? (int) GFEDF_DATA_API_TOKEN_TTL
+			: HOUR_IN_SECONDS;
+	}
+
+	/**
 	 * Whether SSL is verified on Data API requests.
 	 *
-	 * Defaults to false to preserve existing behavior; set GFEDF_DATA_API_SSLVERIFY
-	 * to true in production when ready.
+	 * Defaults to true; set GFEDF_DATA_API_SSLVERIFY to false only for broken local/dev certs.
 	 *
 	 * @return bool
 	 */
 	public static function get_data_api_sslverify() {
-		return defined( 'GFEDF_DATA_API_SSLVERIFY' ) ? (bool) GFEDF_DATA_API_SSLVERIFY : false;
+		return defined( 'GFEDF_DATA_API_SSLVERIFY' ) ? (bool) GFEDF_DATA_API_SSLVERIFY : true;
 	}
 }
