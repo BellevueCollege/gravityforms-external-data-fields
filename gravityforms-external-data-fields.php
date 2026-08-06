@@ -226,6 +226,85 @@ class GFEDF {
     }
 
     /**
+     * Whether post content embeds a Gravity Forms shortcode or block.
+     *
+     * @param string $content Post content.
+     * @return bool
+     */
+    protected function content_has_gravity_form( $content ) {
+        return has_shortcode( $content, 'gravityform' )
+            || has_shortcode( $content, 'gravityforms' )
+            || has_block( 'gravityforms/form', $content );
+    }
+
+    /**
+     * Form ID from a gravityforms/form block tree.
+     *
+     * @param array $blocks Parsed blocks from parse_blocks().
+     * @return int
+     */
+    protected function find_gravity_forms_block_form_id( $blocks ) {
+        foreach ( $blocks as $block ) {
+            $block_name = isset( $block['blockName'] ) ? $block['blockName'] : '';
+            if ( $block_name === 'gravityforms/form' && ! empty( $block['attrs']['formId'] ) ) {
+                return absint( $block['attrs']['formId'] );
+            }
+
+            if ( ! empty( $block['innerBlocks'] ) && is_array( $block['innerBlocks'] ) ) {
+                $inner_form_id = $this->find_gravity_forms_block_form_id( $block['innerBlocks'] );
+                if ( $inner_form_id ) {
+                    return $inner_form_id;
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Resolve the embedded Gravity Forms form ID from shortcode or block.
+     *
+     * @param string $content Post content.
+     * @return int
+     */
+    protected function get_embedded_form_id( $content ) {
+        $form_id = $this->shortcode->get_attribute_value( 'id' );
+        if ( ! empty( $form_id ) ) {
+            return absint( $form_id );
+        }
+
+        if ( ! has_block( 'gravityforms/form', $content ) ) {
+            return 0;
+        }
+
+        return $this->find_gravity_forms_block_form_id( parse_blocks( $content ) );
+    }
+
+    /**
+     * Whether this page needs a Data API lookup for the current request.
+     *
+     * @param string $content Post content.
+     * @return bool
+     */
+    protected function page_needs_external_data_lookup( $content ) {
+        if ( $this->requiresEmployeeAccess ) {
+            return true;
+        }
+
+        $form_id = $this->get_embedded_form_id( $content );
+        if ( empty( $form_id ) || ! class_exists( 'GFAPI' ) ) {
+            return false;
+        }
+
+        $form = GFAPI::get_form( $form_id );
+        if ( empty( $form ) || is_wp_error( $form ) ) {
+            return false;
+        }
+
+        return $this->form_uses_external_data_fields( $form );
+    }
+
+    /**
      * Aggregate student/employee lookup results into a single status.
      *
      * @return string ok|not_found|unavailable
@@ -345,56 +424,68 @@ class GFEDF {
         debug_log ( "(wp) GF External Data Fields plugin :: after_auth_action" );
 
         global $post;
+        if ( empty( $post ) || empty( $post->post_content ) ) {
+            return;
+        }
+
         $content = $post->post_content;
 
-        if ( ! empty( $content ) ) {
+        if ( ! $this->content_has_gravity_form( $content ) ) {
+            return;
+        }
 
-            $this->shortcode->get_shortcode_from_content($content);
+        $this->shortcode->get_shortcode_from_content( $content );
 
-            $restrict_attr = GFEDF_Config::get_restrict_attr();
-            $restrict_value = $this->shortcode->get_attribute_value( $restrict_attr );
-            $this->requiresEmployeeAccess = ( ! empty( $restrict_value ) && strtolower( $restrict_value ) === 'employees' );
+        $restrict_attr = GFEDF_Config::get_restrict_attr();
+        $restrict_value = $this->shortcode->get_attribute_value( $restrict_attr );
+        $this->requiresEmployeeAccess = ( ! empty( $restrict_value ) && strtolower( $restrict_value ) === 'employees' );
 
-            if ( is_user_logged_in() ) {
-                $current_user = wp_get_current_user();
-                $username = $current_user->user_login;
-                $student_only_domain = '@my.bellevuecollege.edu';
-                $is_student_only_account = substr_compare(
-                    $username,
-                    $student_only_domain,
-                    -strlen( $student_only_domain ),
-                    strlen( $student_only_domain ),
-                    true
-                ) === 0;
+        if ( ! is_user_logged_in() ) {
+            return;
+        }
 
-                // Always query students first; my.bellevuecollege.edu accounts are student-only.
-                $this->studentdata = new StudentData( $username );
+        // Skip remote Data API calls when the page does not use this plugin's features.
+        if ( ! $this->page_needs_external_data_lookup( $content ) ) {
+            return;
+        }
 
-                $isEmp = false;
-                if ( ! $is_student_only_account ) {
-                    $this->empdata = new EmployeeData( $username );
-                    $isEmp = $this->empdata->is_employee();
-                }
+        $current_user = wp_get_current_user();
+        $username = $current_user->user_login;
+        $student_only_domain = '@my.bellevuecollege.edu';
+        $is_student_only_account = substr_compare(
+            $username,
+            $student_only_domain,
+            -strlen( $student_only_domain ),
+            strlen( $student_only_domain ),
+            true
+        ) === 0;
 
-                $this->externalDataStatus = $this->aggregate_external_data_status();
-                debug_log( "GFEDF :: aggregated external data status: " . $this->externalDataStatus );
+        // Always query students first; my.bellevuecollege.edu accounts are student-only.
+        $this->studentdata = new StudentData( $username );
 
-                /*
-                 * Limited access for employees based on shortcode attribute.
-                 * Redirect only when the lookup completed and the user is not an employee.
-                 * During an API outage, fail closed via maybe_block_* instead of redirecting.
-                 */
-                if ( $this->requiresEmployeeAccess && ! $isEmp
-                    && $this->externalDataStatus !== DataApi::STATUS_UNAVAILABLE ) {
-                    $redirect_url = $this->shortcode->get_attribute_value( GFEDF_Config::get_restrict_fail_redirect_attr() );
-                    if ( empty( $redirect_url ) ) {
-                        $redirect_url = GFEDF_Config::get_default_redirect_url();
-                    }
-                    if ( ! empty( $redirect_url ) ) {
-                        wp_safe_redirect( $redirect_url );
-                        exit;
-                    }
-                }
+        $isEmp = false;
+        if ( ! $is_student_only_account ) {
+            $this->empdata = new EmployeeData( $username );
+            $isEmp = $this->empdata->is_employee();
+        }
+
+        $this->externalDataStatus = $this->aggregate_external_data_status();
+        debug_log( "GFEDF :: aggregated external data status: " . $this->externalDataStatus );
+
+        /*
+         * Limited access for employees based on shortcode attribute.
+         * Redirect only when the lookup completed and the user is not an employee.
+         * During an API outage, fail closed via maybe_block_* instead of redirecting.
+         */
+        if ( $this->requiresEmployeeAccess && ! $isEmp
+            && $this->externalDataStatus !== DataApi::STATUS_UNAVAILABLE ) {
+            $redirect_url = $this->shortcode->get_attribute_value( GFEDF_Config::get_restrict_fail_redirect_attr() );
+            if ( empty( $redirect_url ) ) {
+                $redirect_url = GFEDF_Config::get_default_redirect_url();
+            }
+            if ( ! empty( $redirect_url ) ) {
+                wp_safe_redirect( $redirect_url );
+                exit;
             }
         }
     }
