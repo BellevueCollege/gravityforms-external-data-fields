@@ -27,19 +27,26 @@ define( 'GFEDF_DATA_API_CLIENT_KEY', 'your-client-key' );
 | Constant | Default | Description |
 |---|---|---|
 | `GFEDF_RESTRICT_ATTR` | `allow` | Restriction attribute used in the Gravity Forms shortcode |
-| `GFEDF_RESTRICT_FAIL_REDIRECT_ATTR` | `failure_redirect_url` | Shortcode attribute for redirect URL when restriction fails (must be an on-site URL; uses `wp_safe_redirect`) |
-| `GFEDF_DEFAULT_REDIRECT_URL` | `""` | Default redirect URL if none is provided in the shortcode (must be on-site) |
+| `GFEDF_RESTRICT_FAIL_REDIRECT_ATTR` | `failure_redirect_url` | Shortcode attribute for redirect URL when restriction fails (same site, or any `bellevuecollege.edu` host/subdomain; uses `wp_safe_redirect`) |
+| `GFEDF_DEFAULT_REDIRECT_URL` | `""` | Default redirect URL if none is provided in the shortcode (same site, or any `bellevuecollege.edu` host/subdomain) |
 | `GFEDF_DATA_API_STUB_EMP` | `employee/%s` | Employee endpoint path stub |
 | `GFEDF_DATA_API_STUB_STU` | `student/%s` | Student endpoint path stub |
 | `GFEDF_DATA_API_STUB_AUTH` | `auth/login` | Auth/login endpoint path stub |
 | `GFEDF_DATA_API_TOKEN_OPTION_NAME` | `gfedf_dataapi_token` | Transient key for the encrypted API token |
 | `GFEDF_DATA_API_TOKEN_TTL` | `HOUR_IN_SECONDS` | TTL in seconds for the encrypted API token transient |
 | `GFEDF_DATA_API_SSLVERIFY` | `true` | Whether SSL is verified on Data API requests |
+| `GFEDF_ENABLE_DEBUG_LOG` | `false` | Enable plugin debug messages via `error_log` |
 
 SSL verification defaults to `true`. Set `GFEDF_DATA_API_SSLVERIFY` to `false` only for broken local/dev certificates:
 
 ```php
 define( 'GFEDF_DATA_API_SSLVERIFY', false );
+```
+
+Debug logging defaults to off. Enable it in `wp-config.php` when troubleshooting:
+
+```php
+define( 'GFEDF_ENABLE_DEBUG_LOG', true );
 ```
 
 The Data API bearer token is stored encrypted (OpenSSL AES-256-CBC, key from `wp_salt( 'auth' )`) in a WordPress transient that expires after the configured TTL.

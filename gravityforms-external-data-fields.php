@@ -75,6 +75,7 @@ class GFEDF {
 
         add_filter( 'gform_get_form_filter', array( $this, 'maybe_block_form_display' ), 10, 2 );
         add_filter( 'gform_validation', array( $this, 'maybe_block_form_submission' ) );
+        add_filter( 'allowed_redirect_hosts', array( $this, 'allow_bellevue_redirect_host' ), 10, 2 );
 
         //shortcode filters
         add_shortcode( 'gfedf_redirect_to_login', array( $this, 'gfedf_login_redirect' ) );
@@ -414,6 +415,20 @@ class GFEDF {
         return $validation_result;
     }
 
+    /**
+     * Allow bellevuecollege.edu and its subdomains for wp_safe_redirect.
+     *
+     * @param string[] $hosts Allowed hosts.
+     * @param string   $host  Host being redirected to.
+     * @return string[]
+     */
+    public function allow_bellevue_redirect_host( $hosts, $host ) {
+        if ( preg_match( '/(^|\.)bellevuecollege\.edu$/i', $host ) ) {
+            $hosts[] = $host;
+        }
+        return $hosts;
+    }
+
     /*******
     * Check if user authenticated, then gather data for user.
     * Also checks if 'allow' is set to restrict type of user and redirects as necessary
@@ -451,6 +466,7 @@ class GFEDF {
 
         $current_user = wp_get_current_user();
         $username = $current_user->user_login;
+        //$username = 'student.test@bellevuecollege.edu'; // DEBUGGING ONLY -- TEST ACCOUNT USERNAME
         $student_only_domain = '@my.bellevuecollege.edu';
         $is_student_only_account = substr_compare(
             $username,
