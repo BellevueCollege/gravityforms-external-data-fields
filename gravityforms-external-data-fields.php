@@ -239,11 +239,13 @@ class GFEDF {
      * @return string
      */
     protected function get_external_data_error_message() {
+        $service_desk_link = '<a href="https://www.bellevuecollege.edu/servicedesk">Bellevue College ITS Service Desk</a>';
+
         if ( $this->externalDataStatus === DataApi::STATUS_UNAVAILABLE ) {
-            return 'We are temporarily unable to load your information from college systems, so this form cannot be loaded. Please try again later. If the problem continues, contact Bellevue College support.';
+            return "We are temporarily unable to load your information from college systems, so this form cannot be loaded. Please try again later. If the problem continues, contact the {$service_desk_link}.";
         }
 
-        return 'We could not find a matching student or employee record for your account, so this form cannot be loaded. If you believe this is an error, please contact Bellevue College support.';
+        return "We could not find a matching student or employee record for your account, so this form cannot be loaded. If you believe this is an error, please contact the {$service_desk_link}.";
     }
 
     /**
@@ -269,7 +271,12 @@ class GFEDF {
         }
 
         // Reuse Gravity Forms validation styling for a familiar error presentation.
-        return "<div class='validation_error alert alert-danger'>" . esc_html( $this->get_external_data_error_message() ) . '</div>';
+        $message = wp_kses(
+            $this->get_external_data_error_message(),
+            array( 'a' => array( 'href' => true ) )
+        );
+
+        return "<div class='validation_error alert alert-danger'>" . $message . '</div>';
     }
 
     /**
@@ -290,7 +297,10 @@ class GFEDF {
         // Standard Gravity Forms pattern: mark a field failed so the form-level error is shown.
         if ( ! empty( $form['fields'][0] ) ) {
             $form['fields'][0]->failed_validation  = true;
-            $form['fields'][0]->validation_message = $this->get_external_data_error_message();
+            $form['fields'][0]->validation_message = wp_kses(
+                $this->get_external_data_error_message(),
+                array( 'a' => array( 'href' => true ) )
+            );
         }
 
         $validation_result['form'] = $form;
