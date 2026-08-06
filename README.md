@@ -12,18 +12,47 @@ This plugin is used by authenticated forms that pre-populate field data. It conn
 
 ### Configuration
 
-After installation, create a `config.php` file in the main directory using the sample config file (`config-sample.php`) as an example.
+Add Data API credentials (and any optional overrides) as constants in `wp-config.php`, **above** the line `/* That's all, stop editing! */`.
 
-- `$restrict_attr` -  The restriction attribute used in the Gravity Forms shortcode used to include the form in a page or post.
-- `$restrict_fail_redirect_attr` - The name of the optional attribute for specifying a redirect URL if the user fails the restriction. Use in the Gravity Form shortcode that includes the form in a page or post.
-- `$default_redirect_url` - The default redirect url (for those that fail the user restriction) in case another is not provided in the shortcode
-- `$data_api_url` - The base URL for the Data API api endpoints (with trailing slash)
-- `$data_api_stub_emp` - The stub path for the api end point to get student info (config sample is correct unless DataAPI changes).
-- `$data_api_stub_stu` - The stub path for the api end point to get student info (config sample is correct unless DataAPI changes).
-- `$data_api_stub_auth` - The stub path for the api login/authentication end point (config sample is correct unless DataAPI changes).
-- `$data_api_clientid`, `$data_api_clientkey` - The client ID and key for the plugin that will authenticate it to the DataAPI.
-- `$data_api_token_option_name` - Name to use for WP option when saving token. (Preset value should not need changed unless there is a naming conflict for some reason.)
-- `$data_api_sslverify` - Specify whether SSL is verified in call to DataAPI. Should be `true` for production environment.
+#### Required
+
+```php
+define( 'GFEDF_DATA_API_URL', 'https://example.com/api/' ); // base URL with trailing slash
+define( 'GFEDF_DATA_API_CLIENT_ID', 'your-client-id' );
+define( 'GFEDF_DATA_API_CLIENT_KEY', 'your-client-key' );
+```
+
+#### Optional overrides
+
+| Constant | Default | Description |
+|---|---|---|
+| `GFEDF_RESTRICT_ATTR` | `allow` | Restriction attribute used in the Gravity Forms shortcode |
+| `GFEDF_RESTRICT_FAIL_REDIRECT_ATTR` | `failure_redirect_url` | Shortcode attribute for redirect URL when restriction fails (same site, or any `bellevuecollege.edu` host/subdomain; uses `wp_safe_redirect`) |
+| `GFEDF_DEFAULT_REDIRECT_URL` | `""` | Default redirect URL if none is provided in the shortcode (same site, or any `bellevuecollege.edu` host/subdomain) |
+| `GFEDF_DATA_API_STUB_EMP` | `employee/%s` | Employee endpoint path stub |
+| `GFEDF_DATA_API_STUB_STU` | `student/%s` | Student endpoint path stub |
+| `GFEDF_DATA_API_STUB_AUTH` | `auth/login` | Auth/login endpoint path stub |
+| `GFEDF_DATA_API_TOKEN_OPTION_NAME` | `gfedf_dataapi_token` | Transient key for the encrypted API token |
+| `GFEDF_DATA_API_TOKEN_TTL` | `HOUR_IN_SECONDS` | TTL in seconds for the encrypted API token transient |
+| `GFEDF_DATA_API_SSLVERIFY` | `true` | Whether SSL is verified on Data API requests |
+| `GFEDF_ENABLE_DEBUG_LOG` | `false` | Enable plugin debug messages via `error_log` |
+
+SSL verification defaults to `true`. Set `GFEDF_DATA_API_SSLVERIFY` to `false` only for broken local/dev certificates:
+
+```php
+define( 'GFEDF_DATA_API_SSLVERIFY', false );
+```
+
+Debug logging defaults to off. Enable it in `wp-config.php` when troubleshooting:
+
+```php
+define( 'GFEDF_ENABLE_DEBUG_LOG', true );
+```
+
+The Data API bearer token is stored encrypted (OpenSSL AES-256-CBC, key from `wp_salt( 'auth' )`) in a WordPress transient that expires after the configured TTL.
+#### Migrating from `config.php`
+
+If you previously used a plugin-root `config.php` copied from `config-sample.php`, move those values into the corresponding `GFEDF_*` constants in `wp-config.php`, then delete the plugin `config.php` file.
 
 ### Usage
 
@@ -42,9 +71,24 @@ Log in to continue. [gfedf_redirect_to_login]
 Log in to continue. [gfedf_redirect_to_login class="btn btn-primary"]
 ```
 
+#### Autofill parameters
+
+To pre-populate a Gravity Forms field, open the field in the Form Editor, go to the **Advanced** tab, enable **Allow field to be populated dynamically**, and enter one of the parameter names below.
+
+| Parameter | Description | Student | Employee |
+|---|---|---|---|
+| `bc_sid` | Student/employee ID (EMPLID) | ✓ | ✓ |
+| `bc_first_name` | First name | ✓ | ✓ |
+| `bc_last_name` | Last name | ✓ | ✓ |
+| `bc_email` | Email address | ✓ | ✓ |
+| `bc_dayphone` | Daytime phone | ✓ | ✓ (uses employee phone) |
+| `bc_evephone` | Evening phone | ✓ | — |
+
+Student data is preferred when the logged-in user has a student record; otherwise employee data is used (except `bc_evephone`, which is student-only).
+
 #### Additional functionality
 
-[Visit the wiki](https://github.com/BellevueCollege/gravityforms-external-data-fields/wiki/Plugin-Functionality) for additional info on prepopulating fields or restricting the login to only employees.
+[Visit the wiki](https://github.com/BellevueCollege/gravityforms-external-data-fields/wiki/Plugin-Functionality) for additional info on restricting the login to only employees.
 
 
 ### Updates

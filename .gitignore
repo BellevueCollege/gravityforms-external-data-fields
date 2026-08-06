@@ -1,3 +1,4 @@
+# Ignore leftover local plugin config from the pre-wp-config setup
 config.php
 
 # Default WordPress ignores provided by Github
@@ -14,6 +15,7 @@ sitemap.xml
 wp-content/cache/
 wp-content/backups/
 sitemap.xml.gz
+.DS_Store
 
 
 # Created by http://www.gitignore.io
