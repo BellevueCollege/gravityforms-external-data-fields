@@ -124,4 +124,15 @@ class GFEDF_Config {
 	public static function get_data_api_sslverify() {
 		return defined( 'GFEDF_DATA_API_SSLVERIFY' ) ? (bool) GFEDF_DATA_API_SSLVERIFY : true;
 	}
+
+	/**
+	 * Whether plugin debug messages are written via error_log.
+	 *
+	 * Defaults to false; set GFEDF_ENABLE_DEBUG_LOG to true in wp-config.php to enable.
+	 *
+	 * @return bool
+	 */
+	public static function is_debug_log_enabled() {
+		return defined( 'GFEDF_ENABLE_DEBUG_LOG' ) ? (bool) GFEDF_ENABLE_DEBUG_LOG : false;
+	}
 }

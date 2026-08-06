@@ -2,14 +2,11 @@
 
 defined( 'ABSPATH' ) || exit;
 
-// Disable to turn off debug logging
-define ( "ENABLE_DEBUG_LOG", false );
-
 /**
 * @param $message
 */
 function debug_log( $message ) {
-    if ( ENABLE_DEBUG_LOG ) {
+    if ( GFEDF_Config::is_debug_log_enabled() ) {
         $date = new DateTime();
         error_log( site_name () . ": [" . $date->format ( 'Y-m-d H:i:s' ) . "] " . $message );
     }
